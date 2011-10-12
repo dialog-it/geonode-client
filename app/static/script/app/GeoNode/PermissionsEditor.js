@@ -118,7 +118,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                     { xtype: 'radio', name: 'viewmode', inputValue: 'ANYONE', boxLabel: gettext( 'Anyone')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'REGISTERED', boxLabel: gettext('Any registered user')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')},
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid userst')},
+                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid users')},
                 ], listeners: {
                     change: function(grp, checked) {
                         this.viewMode = checked.inputValue;
