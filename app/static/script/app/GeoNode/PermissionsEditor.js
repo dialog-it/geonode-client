@@ -23,6 +23,9 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     // a GeoNode.UserSelector widget for the manager list
     managerChooser: null,
 
+    paymentPeriods:null,
+    paymentPeriodChooser: null,
+
     levels: {
         'admin': 'layer_admin',
         'readwrite': 'layer_readwrite',
@@ -67,6 +70,23 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 update: notifyOfUpdate
             }
         });
+        this.paymentPeriods = new Ext.data.Store({
+            reader: new Ext.data.JsonReader({
+                root: 'payment_options',
+                totalProperty: 'count',
+                fields: [{
+                    name: 'payment_type_description',
+                    name: 'payment_type_value',
+                    name: 'periodCost'
+                }]
+            }),
+            listeners: {
+                add: notifyOfUpdate,
+                remove: notifyOfUpdate,
+                update: notifyOfUpdate
+            }
+        });
+        
     },
 
     buildUserChooser: function(cfg) {
@@ -75,24 +95,39 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
         return new GeoNode.UserSelector(finalConfig);
     },
-
+    buildPaymentPeriodChooser: function (cfg) {
+        var finalConfig = {
+            owner: this.permissions.owner,
+            userLookup: this.userLookup
+        };
+        Ext.apply(finalConfig, cfg);
+        return new GeoNode.PaymentSelector(finalConfig);
+    },
     buildViewPermissionChooser: function() {
+        this.paymentPeriondChooser = this.buildPaymentPeriodChooser({
+            store: this.paymentPeriods
+
+        });
+        this.paymentPeriondChooser.setDisabled(true);
+        
         return new Ext.Panel({
             border: false,
-            bwrapCfg: { tag: 'p' },
             items: [
                 {html: "<strong>" + gettext("Who can view and download this data?") + "</strong>", flex: 1, border: false},
                 { xtype: 'radiogroup', columns: 1, value: this.viewMode, items: [
                     { xtype: 'radio', name: 'viewmode', inputValue: 'ANYONE', boxLabel: gettext( 'Anyone')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'REGISTERED', boxLabel: gettext('Any registered user')},
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')}
+                    { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')},
+                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid users')},
                 ], listeners: {
                     change: function(grp, checked) {
                         this.viewMode = checked.inputValue;
+                        this.paymentPeriondChooser.setDisabled(this.viewMode !== 'PAID');
                         this.fireEvent("updated", this);
                     },
                     scope: this
-                }}, 
+                }},
+                this.paymentPeriondChooser.panel
             ]
         }); 
     },
@@ -117,7 +152,6 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
         return new Ext.Panel({
             border: false, 
-            bwrapCfg: { tag: 'p' },
             items: [
                 {html: "<strong>" +  gettext('Who can edit this data?') + "</strong>", flex: 1, border: false},
                 { xtype: 'radiogroup', columns: 1, value: this.editMode, items: [
@@ -153,7 +187,6 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         });
         return new Ext.Panel({
             border: false, 
-            bwrapCfg: { tag: 'p' },
             items: [
                 {html: "<strong>" +  gettext('Who can manage and edit this data?') + "</strong>", flex: 1, border: false},
                 this.managerChooser.panel
@@ -192,7 +225,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         if (this.viewMode === 'ANYONE') {
             anonymousPermissions = this.levels['readonly'];
         } else {
-            anonymousPermissions = this.levels['_none'];
+            anonymousPermissions = this.levels['none'];
         }
 
         if (this.editMode === 'REGISTERED') {
@@ -200,7 +233,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         } else if (this.viewMode === 'REGISTERED') {
             authenticatedPermissions = this.levels['readonly'];
         } else {
-            authenticatedPermissions = this.levels['_none'];
+            authenticatedPermissions = this.levels['none'];
         }
 
         perUserPermissions = [];
@@ -214,10 +247,16 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             perUserPermissions.push([rec.get("username"), this.levels['admin']]);
         }, this);
 
+        selectedPeriods = [];
+        this.paymentPeriods.each(function (rec) {
+        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('periodCost')]);
+        }, this);
+        
         return {
             anonymous: anonymousPermissions,
             authenticated: authenticatedPermissions,
-            users: perUserPermissions
+            users: perUserPermissions,
+            payment_options : selectedPeriods
         };
     },
 

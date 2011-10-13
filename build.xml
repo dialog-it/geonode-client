@@ -1,6 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="geonode-client" default="dist" basedir=".">
 
+<macrodef name = "git">
+    <attribute name = "command" />
+    <attribute name = "dir" default = "" />
+    <element name = "args" optional = "true" />
+    <sequential>
+        <echo message = "git @{command}" />
+        <exec executable = "git" dir = "@{dir}">
+            <arg value = "@{command}" />
+            <args/>
+        </exec>
+    </sequential>
+</macrodef>
+
+<macrodef name = "git-clone-pull">
+    <attribute name = "repository" />
+    <attribute name = "dest" />
+    <sequential>
+        <git command = "clone">
+            <args>
+                <arg value = "@{repository}" />
+                <arg value = "@{dest}" />
+            </args>
+        </git>
+        <git command = "pull" dir = "@{dest}" />
+    </sequential>
+</macrodef>
+
     <description>
         Ready GXP Build File
     </description>
@@ -23,6 +50,7 @@
             <arg line="checkout e0dce2be640fc6fb43a1239d252948d10687ba9c"/>
         </exec>
 
+
         <echo message="building ringo jars"/>
         <ant dir="${build}/ringo" target="jar"/>
         <!-- uncomment this if you have additional jars in a lib dir
@@ -30,6 +58,13 @@
             <fileset dir="lib"/>
         </copy>
         -->
+
+        <echo message="pulling in external library"/>
+	<git-clone-pull repository="git://github.com/GeoNode/PrintPreview.git" dest="app/static/externals/PrintPreview/" />
+	<git-clone-pull repository="git://github.com/opengeo/GeoExt.git" dest="app/static/externals/geoext/" />
+	<git-clone-pull repository="git://github.com/opengeo/gxp.git" dest="app/static/externals/gxp/" />
+	<git-clone-pull repository="git://github.com/openlayers/openlayers.git" dest="app/static/externals/openlayers/" />
+
 
         <echo message="pulling in buildkit (ignore fatal warning)"/>
         <mkdir dir="${build}/buildkit"/>
