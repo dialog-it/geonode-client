@@ -17,7 +17,52 @@ Ext.namespace("GeoExplorer");
  *  Create a GeoExplorer application suitable for embedding in larger pages.
  */
 GeoExplorer.Viewer = Ext.extend(GeoExplorer, {
+    
+    /** api: config[useCapabilities]
+     *  ``Boolean`` If set to false, no Capabilities document will be loaded.
+     */
+    
+    /** api: config[useToolbar]
+     *  ``Boolean`` If set to false, no top toolbar will be rendered.
+     */
 
+    loadConfig: function(config) {
+        var source;
+        for (var s in config.sources) {
+            source = config.sources[s];
+            if (!source.ptype || /wmsc?source/.test(source.ptype)) {
+                source.forceLazy = config.useCapabilities === false;
+            }
+            if (config.useToolbar === false) {
+                var remove = true, layer;
+                for (var i=config.map.layers.length-1; i>=0; --i) {
+                    layer = config.map.layers[i];
+                    if (layer.source == s) {
+                        if (layer.visibility === false) {
+                            config.map.layers.remove(layer);
+                        } else {
+                            remove = false;
+                        }
+                    }
+                }
+                if (remove) {
+                    delete config.sources[s];
+                }
+            }
+        }
+        if (config.useToolbar !== false) {
+            config.tools = (config.tools || []).concat({
+                ptype: "gxp_styler",
+                id: "styler",
+                rasterStyling: true,
+                actionTarget: undefined
+            });
+        }
+        // load the super's super, because we don't want the default tools from
+        // GeoExplorer
+        GeoExplorer.superclass.loadConfig.apply(this, arguments);
+    },
+    
     /** private: method[initPortal]
      * Create the various parts that compose the layout.
      */
@@ -42,6 +87,7 @@ GeoExplorer.Viewer = Ext.extend(GeoExplorer, {
         this.mapPanelContainer = new Ext.Panel({
             layout: "card",
             region: "center",
+            ref: "../main",
             tbar: this.toolbar,
             defaults: {
                 border: false
@@ -49,6 +95,7 @@ GeoExplorer.Viewer = Ext.extend(GeoExplorer, {
             items: [
                 this.mapPanel
             ],
+            ref: "../main",
             activeItem: 0
         });
         if (window.google && google.earth) {
