@@ -26,6 +26,17 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                  data: []
              });
          }
+     	this.paymentTypeStore = new Ext.data.ArrayStore({
+      		 storeId: 'paymentTypeStore',
+    		idIndex: 0,
+    		id:0,
+   	        fields: ['payment_type_desc'],
+   	        data:[
+   	                    [ 'By Periods'],
+   	                    ['By Transactions']
+   	             ] 
+   	    });
+     	
     	 
     	 
     },
@@ -79,9 +90,13 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.paymentAmount.reset();
             }        
         }
-        this.addButton = new Ext.Button({
+        this.periodAddButton = new Ext.Button({
             iconCls: 'icon-adduser',
             handler: addSelectedPeriod,
+            scope: this
+        });
+        this.transactionAddButton = new Ext.Button({
+            iconCls: 'icon-adduser',
             scope: this
         });
         this.availablePeriods = new Ext.form.ComboBox({
@@ -115,6 +130,87 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
            		}
             }
         });
+        this.paymentTypeSelector =  new Ext.form.ComboBox({
+            width: 150,
+            store: this.paymentTypeStore,
+            typeAhead: true,
+            lazyRender:true,
+            mode: 'local',
+            align: 'right',
+            border: 'false',
+            displayField: 'payment_type_desc',
+		    valueField: 'payment_type_desc',
+		    mode: 'local',
+		    triggerAction: 'all',
+            emptyText: gettext("Select Payment Type..."),
+            listeners: {
+                scope: this,
+                'select': function( combo, index, scrollIntoView) {
+                  if(combo.getValue() == 'By Periods'){
+                	  this.setDisabledPeriodOptions(false);
+                	  this.setDisabledTransactoinOptions(true);
+                  }else if (combo.getValue() == 'By Transactions'){
+                	  this.setDisabledPeriodOptions(true);
+                	  this.setDisabledTransactoinOptions(false);
+                  }
+                }
+                
+            }       	
+        });
+        
+        this.transactionPayment = new Ext.form.TextField({
+            name: 'transactionPayment',
+            id: 'transactionPayment',
+            width: 180,
+            emptyText: 'Enter cost per transaction..',
+            listeners: {
+           		scope: this
+            }
+        });
+        
+        this.paymentSelectorPanel = new Ext.Panel({
+            border: false,
+            renderTo: this.renderTo,
+            width:400,
+            height:28,
+            items: [
+                    {
+                        border: false,
+                        items: [
+                                	this.paymentTypeSelector
+                               ]
+                    }]           
+        });
+        
+        this.paymentByPeriodPanel =  new Ext.Panel({
+            border: false,
+            renderTo: this.renderTo,
+            width:400,
+            
+            items: [
+                    {
+                        border: false,
+                        items: [
+                                 { layout: 'hbox', border: false, items: [ this.periodAddButton, this.availablePeriods, this.paymentAmount ]} ,
+                                 this.selectedPeriods
+                               ]
+                    }]           
+        });
+        
+        this.transactionPaymentPanel = new Ext.Panel({
+            border: false,
+            renderTo: this.renderTo,
+            width:400,
+            height:28,
+            items: [
+                    {
+                        border: false,
+                        items: [
+                                 { layout: 'hbox', border: false, items: [this.transactionAddButton, this.transactionPayment] }
+                               ]
+                    }]           
+        });
+        
         return new Ext.Panel({
         	
             border: false,
@@ -124,17 +220,23 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             {
                 border: false,
                 items: [
-                        { layout: 'hbox', border: false, items: [ this.addButton, this.availablePeriods, this.paymentAmount ]},
-                        this.selectedPeriods
+                        this.paymentSelectorPanel,
+                        this.paymentByPeriodPanel,
+                        this.transactionPaymentPanel
                         ]
             }]
         });
     },
     setDisabled: function (disabled) {
-    	this.addButton.setDisabled(disabled);
-    	this.availablePeriods.setDisabled(disabled);
-    	this.paymentAmount.setDisabled(disabled);
-    	this.selectedPeriods.setDisabled(disabled);
+    	this.paymentSelectorPanel.setDisabled(disabled);
+    	this.paymentByPeriodPanel.setDisabled(disabled);
+    	this.transactionPaymentPanel.setDisabled(disabled);
+    },
+    setDisabledPeriodOptions: function (disable){
+    	this.paymentByPeriodPanel.setDisabled(disable);
+    },
+    setDisabledTransactoinOptions: function (disable){
+    	this.transactionPaymentPanel.setDisabled(disable);
     },
     readSelectedPeriods: function (){
     	var store = this.selectedPeriods.getStore();
@@ -147,4 +249,3 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     }
     
 });
-
