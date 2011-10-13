@@ -26,6 +26,16 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                  data: []
              });
          }
+    	 
+    	 if (!this.transactionStore) {
+             this.store = new Ext.data.ArrayStore({
+                 idIndex: 0,
+                 fields: ['transactionAmount'],
+                 data: []
+             });
+         }
+    	 
+    	 
      	this.paymentTypeStore = new Ext.data.ArrayStore({
       		 storeId: 'paymentTypeStore',
     		idIndex: 0,
@@ -76,6 +86,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             multiSelect: true
             
         });
+
+
         
         function addSelectedPeriod() {	
             var value = this.availablePeriods.getValue();
@@ -90,6 +102,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.paymentAmount.reset();
             }        
         }
+
         this.periodAddButton = new Ext.Button({
             iconCls: 'icon-adduser',
             handler: addSelectedPeriod,
@@ -148,10 +161,10 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 'select': function( combo, index, scrollIntoView) {
                   if(combo.getValue() == 'By Periods'){
                 	  this.setDisabledPeriodOptions(false);
-                	  this.setDisabledTransactoinOptions(true);
+                	  this.setDisabledTransactionOptions(true);
                   }else if (combo.getValue() == 'By Transactions'){
                 	  this.setDisabledPeriodOptions(true);
-                	  this.setDisabledTransactoinOptions(false);
+                	  this.setDisabledTransactionOptions(false);
                   }
                 }
                 
@@ -229,13 +242,15 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     },
     setDisabled: function (disabled) {
     	this.paymentSelectorPanel.setDisabled(disabled);
-    	this.paymentByPeriodPanel.setDisabled(disabled);
-    	this.transactionPaymentPanel.setDisabled(disabled);
+    	if(disabled){
+    		this.setDisabledPeriodOptions(disabled);
+    		this.setDisabledTransactionOptions(disabled);
+    	}
     },
     setDisabledPeriodOptions: function (disable){
     	this.paymentByPeriodPanel.setDisabled(disable);
     },
-    setDisabledTransactoinOptions: function (disable){
+    setDisabledTransactionOptions: function (disable){
     	this.transactionPaymentPanel.setDisabled(disable);
     },
     readSelectedPeriods: function (){
