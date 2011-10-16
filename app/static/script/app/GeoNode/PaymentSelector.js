@@ -28,16 +28,25 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
          }
     	 
     	 if (!this.transactionStore) {
-             this.store = new Ext.data.ArrayStore({
+             this.transactionStore = new Ext.data.ArrayStore({
                  idIndex: 0,
-                 fields: ['transactionAmount'],
+                 fields: ['transactionAmount', 'numberOfTransactions'],
                  data: []
              });
          }
     	 
+    	 if (!this.availabletransactions) {
+             this.availabletransactions = new Ext.data.ArrayStore({
+                 idIndex: 0,
+                 id:0,
+        		 storeId: 'availabletransactions',
+                 fields: ['transactionAmount', 'numberOfTransactions'],
+                 data: ['0', '1']
+             });
+         }
     	 
      	this.paymentTypeStore = new Ext.data.ArrayStore({
-      		 storeId: 'paymentTypeStore',
+      		storeId : 'paymentTypeStore',
     		idIndex: 0,
     		id:0,
    	        fields: ['payment_type_desc'],
@@ -52,7 +61,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     },
     doLayout: function () {
         var owner = this.owner;
-        var plugin = (function () {
+        var periodOptionPlugin = (function () {
             var view;
 
             function init(v) {
@@ -77,17 +86,51 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             };
         })();
 
+        var transactoinOptionPlugin = (function () {
+            var view;
+
+            function init(v) {
+            	 view = v;
+                 view.on('render', addHooks);
+            }
+
+            function addHooks() {
+            	 view.getEl().on('mousedown', removeItem, this, { delegate: 'button' });
+            }
+
+            function removeItem(e, target) {
+            	 var item = view.findItemFromChild(target);
+                 var idx = view.indexOf(item);
+                 var rec = view.store.getAt(idx);
+                 if (rec.get("numberOfTransactions") !== owner) {
+                     view.store.removeAt(view.indexOf(item));
+                 }
+            }
+            return {
+                init: init
+            };
+        })();
+        
+        
         this.selectedPeriods = new Ext.DataView({
             store: this.store,
             itemSelector: 'div.period_item',
             tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn period_item"><button class="icon-removeuser remove-button">&nbsp;</button>${periodCost} for {payment_type_description} </div></tpl></div>'),
-            plugins: [plugin],
+            plugins: [periodOptionPlugin],
             autoHeight: true,
             multiSelect: true
             
         });
 
 
+        this.transactionPayments = new Ext.DataView({
+            store: this.transactionStore,
+            itemSelector: 'div.paymentTransaction_item',
+            tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn paymentTransaction_item"><button class="icon-removeuser remove-button">&nbsp;</button> ${transactionAmount} per transaction</div></tpl></div>'),
+            plugins: [transactoinOptionPlugin],
+            autoHeight: true,
+        	multiSelect: true
+        });
         
         function addSelectedPeriod() {	
             var value = this.availablePeriods.getValue();
@@ -102,7 +145,23 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.paymentAmount.reset();
             }        
         }
-
+        
+        function addTransactionPayment() {	
+   
+			var value = this.transactionPayment.getValue();
+			var transaction_obj = this.availabletransactions.getAt(0);
+            var index = this.transactionPayments.store.findExact('numberOfTransactions','1');
+			if(index < 0 ){
+			transaction_obj.set('transactionAmount', value);
+			// currently only for one transactions
+			transaction_obj.set('numberOfTransactions', '1');
+			this.transactionPayments.store.add([transaction_obj]);
+			this.transactionPayment.reset();
+			}
+			
+        }
+        
+        
         this.periodAddButton = new Ext.Button({
             iconCls: 'icon-adduser',
             handler: addSelectedPeriod,
@@ -110,6 +169,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         });
         this.transactionAddButton = new Ext.Button({
             iconCls: 'icon-adduser',
+            handler: addTransactionPayment,
             scope: this
         });
         this.availablePeriods = new Ext.form.ComboBox({
@@ -133,7 +193,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             name: 'periodCost',
             id: 'periodCost',
             width: 130,
-            emptyText: 'Enter cost for period',
+            emptyText: 'Enter dollor cost for period',
             listeners: {
            		scope: this,
            		specialkey: function(f,e){
@@ -175,7 +235,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             name: 'transactionPayment',
             id: 'transactionPayment',
             width: 180,
-            emptyText: 'Enter cost per transaction..',
+            emptyText: 'Enter dollor cost per transaction..',
             listeners: {
            		scope: this
             }
@@ -214,12 +274,12 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             border: false,
             renderTo: this.renderTo,
             width:400,
-            height:28,
             items: [
                     {
                         border: false,
                         items: [
-                                 { layout: 'hbox', border: false, items: [this.transactionAddButton, this.transactionPayment] }
+                                 { layout: 'hbox', border: false, items: [this.transactionAddButton, this.transactionPayment] },
+                                 this.transactionPayments
                                ]
                     }]           
         });
