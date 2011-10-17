@@ -7,11 +7,21 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         this.panel = this.doLayout();
     },
     initPeriodStore: function () {
+    	
+    	
+   	    if (!this.peroidPaymentTypes) {
+            this.peroidPaymentTypes = new Ext.data.ArrayStore({
+                idIndex: 0,
+                fields: ['payment_type_value', 'payment'],
+                data: []
+            });
+        }
+    	
     	this.periodStore = new Ext.data.ArrayStore({
     		 storeId: 'periodStore',
     		idIndex: 0,
     		id:0,
-	        fields: ['payment_type_description', 'payment_type_value', 'periodCost'],
+	        fields: ['payment_type_description', 'payment_type_value', 'payment'],
 	        data:[
 	                    [ '3 Months', '1',  '0'],
 	                    ['6 Months', '2',  '0'],
@@ -19,18 +29,12 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 	                ] 
 	    });
     	
-    	 if (!this.store) {
-             this.store = new Ext.data.ArrayStore({
-                 idIndex: 0,
-                 fields: ['payment_type_description', 'payment_type_value', 'periodCost'],
-                 data: []
-             });
-         }
+
     	 
-    	 if (!this.transactionStore) {
-             this.transactionStore = new Ext.data.ArrayStore({
+    	 if (!this.transactionPaymentTypes) {
+             this.transactionPaymentTypes = new Ext.data.ArrayStore({
                  idIndex: 0,
-                 fields: ['transactionAmount', 'numberOfTransactions'],
+                 fields: ['payment', 'payment_type_value'],
                  data: []
              });
          }
@@ -40,13 +44,13 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                  idIndex: 0,
                  id:0,
         		 storeId: 'availabletransactions',
-                 fields: ['transactionAmount', 'numberOfTransactions'],
-                 data: ['0', '1']
+                 fields: ['payment', 'numberOfTransactions', 'payment_type_value'],
+                 data:[ ['0', '1', '3'] ]
              });
          }
     	 
      	this.paymentTypeStore = new Ext.data.ArrayStore({
-      		storeId : 'paymentTypeStore',
+      		storeId: 'paymentTypeStore',
     		idIndex: 0,
     		id:0,
    	        fields: ['payment_type_desc'],
@@ -102,7 +106,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             	 var item = view.findItemFromChild(target);
                  var idx = view.indexOf(item);
                  var rec = view.store.getAt(idx);
-                 if (rec.get("numberOfTransactions") !== owner) {
+                 if (rec.get("payment_type_value") !== owner) {
                      view.store.removeAt(view.indexOf(item));
                  }
             }
@@ -113,9 +117,9 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         
         
         this.selectedPeriods = new Ext.DataView({
-            store: this.store,
+            store: this.peroidPaymentTypes,
             itemSelector: 'div.period_item',
-            tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn period_item"><button class="icon-removeuser remove-button">&nbsp;</button>${periodCost} for {payment_type_description} </div></tpl></div>'),
+            tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn period_item"><button class="icon-removeuser remove-button">&nbsp;</button>${payment} for {payment_type_description} </div></tpl></div>'),
             plugins: [periodOptionPlugin],
             autoHeight: true,
             multiSelect: true
@@ -124,9 +128,9 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 
 
         this.transactionPayments = new Ext.DataView({
-            store: this.transactionStore,
+            store: this.transactionPaymentTypes,
             itemSelector: 'div.paymentTransaction_item',
-            tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn paymentTransaction_item"><button class="icon-removeuser remove-button">&nbsp;</button> ${transactionAmount} per transaction</div></tpl></div>'),
+            tpl: new Ext.XTemplate('<div><tpl for="."> <div class="x-btn paymentTransaction_item"><button class="icon-removeuser remove-button">&nbsp;</button> ${payment} per transaction</div></tpl></div>'),
             plugins: [transactoinOptionPlugin],
             autoHeight: true,
         	multiSelect: true
@@ -139,7 +143,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.selectedPeriods.store.findExact('payment_type_value', value) == -1
             ) {
             	period_obj = this.availablePeriods.store.getAt(index);
-            	period_obj.set('periodCost', this.paymentAmount.getValue());
+            	period_obj.set('payment', this.paymentAmount.getValue());
                 this.selectedPeriods.store.add([period_obj]);
                 this.availablePeriods.reset();
                 this.paymentAmount.reset();
@@ -152,14 +156,11 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 			var transaction_obj = this.availabletransactions.getAt(0);
             var index = this.transactionPayments.store.findExact('numberOfTransactions','1');
 			if(index < 0 ){
-			transaction_obj.set('transactionAmount', value);
-			// currently only for one transactions
-			transaction_obj.set('numberOfTransactions', '1');
-			this.transactionPayments.store.add([transaction_obj]);
-			this.transactionPayment.reset();
+				transaction_obj.set('payment', value);
+				this.transactionPayments.store.add([transaction_obj]);
+				this.transactionPayment.reset();
 			}
-			
-        }
+		}
         
         
         this.periodAddButton = new Ext.Button({
@@ -313,14 +314,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     setDisabledTransactionOptions: function (disable){
     	this.transactionPaymentPanel.setDisabled(disable);
     },
-    readSelectedPeriods: function (){
-    	var store = this.selectedPeriods.getStore();
-    	var records =  this.store.getRange();
-    	var datar = new Array();
-        for (var i = 0; i < records.length; i++) {
-            datar.push(records[i].data);
-        }
-        return datar;
+    readPaymentType: function (){
+    	return this.paymentTypeSelector.getValue();
     }
     
 });

@@ -23,8 +23,9 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     // a GeoNode.UserSelector widget for the manager list
     managerChooser: null,
 
-    paymentPeriods:null,
-    paymentPeriodChooser: null,
+    peroidPaymentTypes:null,
+    transactionPaymentTypes:null,
+    paymentTypeChooser: null,
 
     levels: {
         'admin': 'layer_admin',
@@ -70,14 +71,28 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 update: notifyOfUpdate
             }
         });
-        this.paymentPeriods = new Ext.data.Store({
+        this.peroidPaymentTypes = new Ext.data.Store({
             reader: new Ext.data.JsonReader({
                 root: 'payment_options',
                 totalProperty: 'count',
                 fields: [{
-                    name: 'payment_type_description',
                     name: 'payment_type_value',
-                    name: 'periodCost'
+                    name: 'payment'
+                }]
+            }),
+            listeners: {
+                add: notifyOfUpdate,
+                remove: notifyOfUpdate,
+                update: notifyOfUpdate
+            }
+        });
+        this.transactionPaymentTypes = new Ext.data.Store({
+            reader: new Ext.data.JsonReader({
+                root: 'payment_options',
+                totalProperty: 'count',
+                fields: [{
+                    name: 'payment_type_value',
+                    name: 'payment'
                 }]
             }),
             listeners: {
@@ -95,7 +110,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
         return new GeoNode.UserSelector(finalConfig);
     },
-    buildPaymentPeriodChooser: function (cfg) {
+    buildPaymentTypesChooser: function (cfg) {
         var finalConfig = {
             owner: this.permissions.owner,
             userLookup: this.userLookup
@@ -104,11 +119,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         return new GeoNode.PaymentSelector(finalConfig);
     },
     buildViewPermissionChooser: function() {
-        this.paymentPeriondChooser = this.buildPaymentPeriodChooser({
-            store: this.paymentPeriods
+        this.paymentTypeChooser = this.buildPaymentTypesChooser({
+        	peroidPaymentTypes: this.peroidPaymentTypes,
+        	transactionPaymentTypes: this.transactionPaymentTypes
 
         });
-        this.paymentPeriondChooser.setDisabled(true);
+        this.paymentTypeChooser.setDisabled(true);
         
         return new Ext.Panel({
             border: false,
@@ -122,12 +138,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 ], listeners: {
                     change: function(grp, checked) {
                         this.viewMode = checked.inputValue;
-                        this.paymentPeriondChooser.setDisabled(this.viewMode !== 'PAID');
+                        this.paymentTypeChooser.setDisabled(this.viewMode !== 'PAID');
                         this.fireEvent("updated", this);
                     },
                     scope: this
                 }},
-                this.paymentPeriondChooser.panel
+                this.paymentTypeChooser.panel
             ]
         }); 
     },
@@ -247,16 +263,28 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             perUserPermissions.push([rec.get("username"), this.levels['admin']]);
         }, this);
 
+        
         selectedPeriods = [];
-        this.paymentPeriods.each(function (rec) {
-        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('periodCost')]);
+        this.peroidPaymentTypes.each(function (rec) {
+        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('payment')]);
+        }, this);
+
+        selectedTransaction = [];
+        this.transactionPaymentTypes.each(function (rec) {
+        	selectedTransaction.push([rec.get("payment_type_value"), rec.get('payment')]);
         }, this);
         
+        payment_options = [];
+        if(this.paymentTypeChooser.readPaymentType() == 'By Periods'){
+        	payment_options = selectedPeriods;
+        }else if(this.paymentTypeChooser.readPaymentType() == 'By Transactions'){
+        	payment_options = selectedTransaction;
+        }
         return {
             anonymous: anonymousPermissions,
             authenticated: authenticatedPermissions,
             users: perUserPermissions,
-            payment_options : selectedPeriods
+            payment_options : payment_options
         };
     },
 
