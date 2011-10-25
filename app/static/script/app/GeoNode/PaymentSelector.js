@@ -50,7 +50,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
          }
     	 
      	this.paymentTypeStore = new Ext.data.ArrayStore({
-      		storeId: 'paymentTypeStore',
+     		storeId: 'paymentTypeStore',
     		idIndex: 0,
     		id:0,
    	        fields: ['payment_type_desc'],
