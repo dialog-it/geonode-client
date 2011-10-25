@@ -41,7 +41,7 @@
         <echo message="pulling in ringo (ignore fatal warning)"/>
         <mkdir dir="${build}/ringo"/>
         <exec executable="git" dir="${build}/ringo" failonerror="false">
-            <arg line="clone -nq git://github.com/ringo/ringojs.git ."/>
+            <arg line="clone -nq http://github.com/ringo/ringojs.git ."/>
         </exec>
         <exec executable="git" dir="${build}/ringo" failonerror="true">
             <arg line="pull origin master"/>
@@ -60,16 +60,16 @@
         -->
 
         <echo message="pulling in external library"/>
-	<git-clone-pull repository="git://github.com/GeoNode/PrintPreview.git" dest="app/static/externals/PrintPreview/" />
-	<git-clone-pull repository="git://github.com/opengeo/GeoExt.git" dest="app/static/externals/geoext/" />
-	<git-clone-pull repository="git://github.com/opengeo/gxp.git" dest="app/static/externals/gxp/" />
-	<git-clone-pull repository="git://github.com/openlayers/openlayers.git" dest="app/static/externals/openlayers/" />
+	<git-clone-pull repository="http://github.com/GeoNode/PrintPreview.git" dest="app/static/externals/PrintPreview/" />
+	<git-clone-pull repository="http://github.com/opengeo/GeoExt.git" dest="app/static/externals/geoext/" />
+	<git-clone-pull repository="http://github.com/opengeo/gxp.git" dest="app/static/externals/gxp/" />
+	<git-clone-pull repository="http://github.com/openlayers/openlayers.git" dest="app/static/externals/openlayers/" />
 
 
         <echo message="pulling in buildkit (ignore fatal warning)"/>
         <mkdir dir="${build}/buildkit"/>
         <exec executable="git" dir="${build}/buildkit" failonerror="false">
-            <arg line="clone -nq git://github.com/tschaub/buildkit.git ."/>
+            <arg line="clone -nq http://github.com/tschaub/buildkit.git ."/>
         </exec>
         <exec executable="git" dir="${build}/buildkit" failonerror="true">
             <arg line="pull origin master"/>
