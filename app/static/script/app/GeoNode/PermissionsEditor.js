@@ -277,7 +277,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         payment_options = [];
         if(this.paymentTypeChooser.readPaymentType() == 'By Periods'){
         	payment_options = selectedPeriods;
-        }else if(this.paymentTypeChooser.readPaymentType() == 'By Transactions'){
+        }else if(this.paymentTypeChooser.readPaymentType() == 'By Byte'){
         	payment_options = selectedTransaction;
         }
         return {
