@@ -12,7 +12,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
    	    if (!this.peroidPaymentTypes) {
             this.peroidPaymentTypes = new Ext.data.ArrayStore({
                 idIndex: 0,
-                fields: ['payment_type_value', 'payment'],
+                fields: ['payment_type_value', 'payment', 'payment_currency'],
                 data: []
             });
         }
@@ -21,7 +21,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		 storeId: 'periodStore',
     		idIndex: 0,
     		id:0,
-	        fields: ['payment_type_description', 'payment_type_value', 'payment'],
+	        fields: ['payment_type_description', 'payment_type_value', 'payment' ],
 	        data:[
 	                    [ '3 Months', '1',  '0'],
 	                    ['6 Months', '2',  '0'],
@@ -34,7 +34,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	 if (!this.transactionPaymentTypes) {
              this.transactionPaymentTypes = new Ext.data.ArrayStore({
                  idIndex: 0,
-                 fields: ['payment', 'payment_type_value'],
+                 fields: ['payment', 'payment_type_value', 'payment_currency'],
                  data: []
              });
          }
@@ -60,7 +60,17 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
    	             ] 
    	    });
      	
-    	 
+     	
+     	this.CurrencyTypeStore = new Ext.data.ArrayStore({
+     		storeId: 'CurrencyTypeStore',
+    		idIndex: 0,
+    		id:0,
+   	        fields: ['currency_id', 'currency_type_code'],
+   	        data:[
+   	                    [ '1', 'AUD'],
+   	                    [ '2', 'NZD']
+   	             ] 
+   	    }); 
     	 
     },
     doLayout: function () {
@@ -145,6 +155,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             ) {
             	period_obj = this.availablePeriods.store.getAt(index);
             	period_obj.set('payment', this.paymentAmount.getValue());
+            	period_obj.set('payment_currency', this.currencyTypeSelector.getValue());
                 this.selectedPeriods.store.add([period_obj]);
                 this.availablePeriods.reset();
                 this.paymentAmount.reset();
@@ -158,6 +169,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             var index = this.transactionPayments.store.findExact('numberOfTransactions','1');
 			if(index < 0 && value != ''){
 				transaction_obj.set('payment', value);
+				transaction_obj.set('payment_currency', this.currencyTypeSelector.getValue());
 				this.transactionPayments.store.add([transaction_obj]);
 				this.transactionPayment.reset();
 			}
@@ -206,7 +218,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             }
         });
         this.paymentTypeSelector =  new Ext.form.ComboBox({
-            width: 150,
+            width: 130,
             store: this.paymentTypeStore,
             typeAhead: true,
             lazyRender:true,
@@ -233,6 +245,24 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             }       	
         });
         
+        this.currencyTypeSelector =  new Ext.form.ComboBox({
+            width: 130,
+            store: this.CurrencyTypeStore,
+            typeAhead: true,
+            lazyRender:true,
+            mode: 'local',
+            align: 'right',
+            border: 'false',
+            displayField: 'currency_type_code',
+		    valueField: 'currency_id',
+		    mode: 'local',
+		    triggerAction: 'all',
+            emptyText: gettext("Select Currency..."),
+            listeners: {
+                scope: this
+            }       	
+        });
+        
         this.transactionPayment = new Ext.form.NumberField({
             name: 'transactionPayment',
             id: 'transactionPayment',
@@ -251,8 +281,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             items: [
                     {
                         border: false,
-                        items: [
-                                	this.paymentTypeSelector
+                        items: [                                	
+                                {layout: 'hbox', border: false, items: [ this.paymentTypeSelector, this.currencyTypeSelector ]}
                                ]
                     }]           
         });

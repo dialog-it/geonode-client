@@ -266,12 +266,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         
         selectedPeriods = [];
         this.peroidPaymentTypes.each(function (rec) {
-        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('payment')]);
+        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency')]);
         }, this);
 
         selectedTransaction = [];
         this.transactionPaymentTypes.each(function (rec) {
-        	selectedTransaction.push([rec.get("payment_type_value"), rec.get('payment')]);
+        	selectedTransaction.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency')]);
         }, this);
         
         payment_options = [];
