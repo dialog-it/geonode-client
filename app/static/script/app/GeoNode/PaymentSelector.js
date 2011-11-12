@@ -1,21 +1,71 @@
 Ext.namespace("GeoNode");
-GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
+GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
 
+	paymentType : null,
+	currency :  null,
+	PER_BYTE_TYPE : '5',
+	PER_3_MONTH_TYPE : '1',
+	PER_6_MONTH_TYPE : '2',
+	PER_9_MONTH_TYPE : '4',
+	
+	AUS_CURRENCY : '1',
+	NZ_CURRENCY : '2',
+	
+	peroidPaymentTypes : null,
+	
+	
     constructor: function (config) {
     	Ext.apply(this, config);
+    	
     	this.initPeriodStore();
+    	this.initPaymentOptions(config.payment_options);
         this.panel = this.doLayout();
+        this.setDisabled(false);
+    },
+    initPaymentOptions: function (payment_options){    	
+    	 if(payment_options != undefined ){
+    		  if(payment_options.length > 0 ){
+    			 this.peroidPaymentTypes.suspendEvents();
+    			 for (var i = 0; i < payment_options.length ; i++){
+    				 paymentType   =   payment_options[i][0]
+    				 paymentAmount =   payment_options[i][1]
+    				 currencyType  =   payment_options[i][2]
+    				 typeDesc      =   payment_options[i][3]
+    				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
+    					
+    					 this.paymentType = 'By Period';
+    					 var paymentData = {
+    							 payment_type_value: paymentType,
+    							 payment: paymentAmount,
+    							 payment_currency : currencyType,
+    							 payment_type_description : typeDesc
+    							};
+    					 
+    					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
+    					 this.peroidPaymentTypes.add(r, i); 	
+    					 
+    				 }else{
+    					 this.paymentType = 'By Byte';
+    				 }
+    				 this.currency = currencyType;
+    				 this.periodStore
+    			 }
+    			 
+    			 this.peroidPaymentTypes.resumeEvents();
+    				 
+    		 }
+    	 }
     },
     initPeriodStore: function () {
     	
     	
-   	    if (!this.peroidPaymentTypes) {
-            this.peroidPaymentTypes = new Ext.data.ArrayStore({
+   	    
+         this.peroidPaymentTypes = new Ext.data.ArrayStore({
                 idIndex: 0,
-                fields: ['payment_type_value', 'payment', 'payment_currency'],
+                fields: ['payment_type_value', 'payment', 'payment_currency', 'payment_type_description'],
                 data: []
             });
-        }
+        
     	
     	this.periodStore = new Ext.data.ArrayStore({
     		 storeId: 'periodStore',
@@ -23,9 +73,9 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		id:0,
 	        fields: ['payment_type_description', 'payment_type_value', 'payment' ],
 	        data:[
-	                    [ '3 Months', '1',  '0'],
-	                    ['6 Months', '2',  '0'],
-	                    ['9 Months',  '4',  '0']
+	                    [ '3 Months', this.PER_3_MONTH_TYPE,  '0'],
+	                    ['6 Months', this.PER_6_MONTH_TYPE,  '0'],
+	                    ['9 Months',  this.PER_9_MONTH_TYPE,  '0']
 	                ] 
 	    });
     	
@@ -67,8 +117,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		id:0,
    	        fields: ['currency_id', 'currency_type_code'],
    	        data:[
-   	                    [ '1', 'AUD'],
-   	                    [ '2', 'NZD']
+   	                    [ this.AUS_CURRENCY, 'AUD'],
+   	                    [ this.NZ_CURRENCY, 'NZD']
    	             ] 
    	    }); 
     	 
@@ -207,7 +257,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             name: 'periodCost',
             id: 'periodCost',
             width: 130,
-            emptyText: 'Enter dollor cost for period',
+            emptyText: 'Enter dollars cost for period',
             listeners: {
            		scope: this,
            		specialkey: function(f,e){
@@ -228,6 +278,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             displayField: 'payment_type_desc',
 		    valueField: 'payment_type_desc',
 		    mode: 'local',
+		    value: this.paymentType,
 		    triggerAction: 'all',
             emptyText: gettext("Select Payment Type..."),
             listeners: {
@@ -256,6 +307,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             displayField: 'currency_type_code',
 		    valueField: 'currency_id',
 		    mode: 'local',
+		    value:this.currency,
 		    triggerAction: 'all',
             emptyText: gettext("Select Currency..."),
             listeners: {
@@ -267,7 +319,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             name: 'transactionPayment',
             id: 'transactionPayment',
             width: 180,
-            emptyText: 'Enter dollor cost per byte..',
+            emptyText: 'Enter dollars cost per byte..',
             listeners: {
            		scope: this
             }

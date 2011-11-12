@@ -112,11 +112,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     },
     buildPaymentTypesChooser: function (cfg) {
         var finalConfig = {
-            owner: this.permissions.owner,
+        	payment_options: this.permissions.payment_options,
             userLookup: this.userLookup
         };
+        alert(finalConfig.payment_options)
         Ext.apply(finalConfig, cfg);
-        return new GeoNode.PaymentSelector(finalConfig);
+        return new GeoNode.PaymentSelection(finalConfig);
     },
     buildViewPermissionChooser: function() {
         this.paymentTypeChooser = this.buildPaymentTypesChooser({
@@ -124,7 +125,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         	transactionPaymentTypes: this.transactionPaymentTypes
 
         });
-        this.paymentTypeChooser.setDisabled(true);
+        this.paymentTypeChooser.setDisabled(false);
         
         return new Ext.Panel({
             border: false,
@@ -138,7 +139,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 ], listeners: {
                     change: function(grp, checked) {
                         this.viewMode = checked.inputValue;
-                        this.paymentTypeChooser.setDisabled(this.viewMode !== 'PAID');
+                        //this.paymentTypeChooser.setDisabled(this.viewMode !== 'PAID');
+                        this.paymentTypeChooser.setDisabled(false);
                         this.fireEvent("updated", this);
                     },
                     scope: this
@@ -222,7 +224,14 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         if (json['anonymous'] == this.levels['readonly']) {
             this.viewMode = 'ANYONE';
         }
-
+        
+        var payment_options = json['payment_options']
+	    if(payment_options != undefined ){
+	        if(payment_options.length > 0 ){
+	          	this.viewMode = 'PAID';
+	        }
+        }
+       
         for (var i = 0; i < json.users.length; i++) {
             if (json.users[i][1] === this.levels['readwrite']) {
                 this.editors.add(new this.editors.recordType({username: json.users[i][0]}, i + 500));
