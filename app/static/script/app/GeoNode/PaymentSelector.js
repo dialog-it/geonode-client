@@ -11,7 +11,11 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
 	AUS_CURRENCY : '1',
 	NZ_CURRENCY : '2',
 	
-	peroidPaymentTypes : null,
+	edit_period : false,
+	edit_byte : false,
+	
+	PAYMENT_BY_PERIOD : 'By Period',
+	PAYMENT_BY_BYTE_USAGE : 'By Byte Usage',
 	
 	
     constructor: function (config) {
@@ -20,20 +24,27 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     	this.initPeriodStore();
     	this.initPaymentOptions(config.payment_options);
         this.panel = this.doLayout();
-        this.setDisabled(false);
+        this.setDisabled(true);
+        if(this.edit_period)this.setInitialPeriodOptionsforEditing();
+        if(this.edit_byte)this.setinitialByteOptionForEditing();
+
     },
-    initPaymentOptions: function (payment_options){    	
+    initPaymentOptions: function (payment_options){
+    	
     	 if(payment_options != undefined ){
+    		 this.peroidPaymentTypes.suspendEvents();
+    		 this.transactionPaymentTypes.suspendEvents();
     		  if(payment_options.length > 0 ){
-    			 this.peroidPaymentTypes.suspendEvents();
+    			 
     			 for (var i = 0; i < payment_options.length ; i++){
     				 paymentType   =   payment_options[i][0]
     				 paymentAmount =   payment_options[i][1]
     				 currencyType  =   payment_options[i][2]
     				 typeDesc      =   payment_options[i][3]
+    				 
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
-    					
-    					 this.paymentType = 'By Period';
+    					 //
+    					 this.paymentType = this.PAYMENT_BY_PERIOD;
     					 var paymentData = {
     							 payment_type_value: paymentType,
     							 payment: paymentAmount,
@@ -43,29 +54,44 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     					 
     					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
     					 this.peroidPaymentTypes.add(r, i); 	
-    					 
+    					 this.edit_period = true;
+    					
     				 }else{
-    					 this.paymentType = 'By Byte';
+    					 this.paymentType = this.PAYMENT_BY_BYTE_USAGE;
+    					 this.edit_byte = true;
+    					 
+    					 var paymentByteData = {
+    							 payment_type_value: paymentType,
+    							 payment: paymentAmount,
+    							 payment_currency : currencyType
+
+    							};
+    					 var r = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
+    					 this.transactionPaymentTypes.add(r, i); 	
+    					 this.edit_period = true;
+    					 
     				 }
     				 this.currency = currencyType;
     				 this.periodStore
     			 }
     			 
-    			 this.peroidPaymentTypes.resumeEvents();
-    				 
+    			
+    			
     		 }
+   		  this.peroidPaymentTypes.resumeEvents();	 
+   		  this.transactionPaymentTypes.resumeEvents();
     	 }
     },
     initPeriodStore: function () {
     	
     	
-   	    
+    	if (!this.peroidPaymentTypes) {
          this.peroidPaymentTypes = new Ext.data.ArrayStore({
                 idIndex: 0,
                 fields: ['payment_type_value', 'payment', 'payment_currency', 'payment_type_description'],
                 data: []
             });
-        
+    	}
     	
     	this.periodStore = new Ext.data.ArrayStore({
     		 storeId: 'periodStore',
@@ -105,8 +131,8 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     		id:0,
    	        fields: ['payment_type_desc'],
    	        data:[
-   	                    [ 'By Periods'],
-   	                    ['By Byte']
+   	                    [ this.PAYMENT_BY_PERIOD],
+   	                    [ this.PAYMENT_BY_BYTE_USAGE]
    	             ] 
    	    });
      	
@@ -368,6 +394,7 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
                     }]           
         });
         
+        
         return new Ext.Panel({
         	
             border: false,
@@ -383,19 +410,42 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
                         ]
             }]
         });
+
+        
     },
     setDisabled: function (disabled) {
+    	
     	this.paymentSelectorPanel.setDisabled(disabled);
-    	if(disabled){
+   		if(!disabled){
+    		if(this.paymentTypeSelector.getValue() == 'By Byte'){
+    			this.setDisabledPeriodOptions(true);
+    			this.setDisabledTransactionOptions(false);
+   			}
+    		if(this.paymentTypeSelector.getValue() == 'By Period'){
+    			this.setDisabledTransactionOptions(true);
+    			this.setDisabledPeriodOptions(false);
+    		}
+    	}else{
     		this.setDisabledPeriodOptions(disabled);
     		this.setDisabledTransactionOptions(disabled);
-    	}
+    	}  
     },
     setDisabledPeriodOptions: function (disable){
     	this.paymentByPeriodPanel.setDisabled(disable);
     },
     setDisabledTransactionOptions: function (disable){
     	this.transactionPaymentPanel.setDisabled(disable);
+    },setInitialPeriodOptionsforEditing : function (){
+    	
+    	this.paymentSelectorPanel.setDisabled(false);
+    	this.setDisabledPeriodOptions(false);
+    	this.setDisabledTransactionOptions(true);
+    	
+    	
+    },setinitialByteOptionForEditing: function (){
+    	this.paymentSelectorPanel.setDisabled(false);
+    	this.setDisabledPeriodOptions(true);
+    	this.setDisabledTransactionOptions(false);
     },
     readPaymentType: function (){
     	return this.paymentTypeSelector.getValue();
