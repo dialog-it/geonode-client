@@ -286,12 +286,14 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         }, this);
         
         payment_options = [];
-
-        if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_PERIOD){
-        	payment_options = selectedPeriods;
-        }else if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_BYTE_USAGE){
-        	payment_options = selectedTransaction;
-        }
+        
+        if(this.viewMode === 'PAID'){
+	        if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_PERIOD){
+	        	payment_options = selectedPeriods;
+	        }else if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_BYTE_USAGE){
+	        	payment_options = selectedTransaction;
+	        }
+    	}
         return {
             anonymous: anonymousPermissions,
             authenticated: authenticatedPermissions,

@@ -7,17 +7,17 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
 	PER_3_MONTH_TYPE : '1',
 	PER_6_MONTH_TYPE : '2',
 	PER_9_MONTH_TYPE : '4',
-	
+
 	AUS_CURRENCY : '1',
 	NZ_CURRENCY : '2',
-	
+
 	edit_period : false,
 	edit_byte : false,
-	
+
 	PAYMENT_BY_PERIOD : 'By Period',
 	PAYMENT_BY_BYTE_USAGE : 'By Byte Usage',
-	
-	
+
+
     constructor: function (config) {
     	Ext.apply(this, config);
     	
@@ -241,6 +241,7 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
         function addTransactionPayment() {	
    
 			var value = this.transactionPayment.getValue();
+			
 			var transaction_obj = this.availabletransactions.getAt(0);
             var index = this.transactionPayments.store.findExact('numberOfTransactions','1');
 			if(index < 0 && value != ''){
@@ -279,10 +280,11 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
                 scope: this
             }
         });
-        this.paymentAmount = new Ext.form.NumberField({
+        this.paymentAmount = new Ext.form.TextField({
             name: 'periodCost',
             id: 'periodCost',
             width: 130,
+            allowBlank:false,
             emptyText: 'Enter dollars cost for period',
             listeners: {
            		scope: this,
@@ -310,10 +312,10 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
             listeners: {
                 scope: this,
                 'select': function( combo, index, scrollIntoView) {
-                  if(combo.getValue() == 'By Periods'){
+                  if(combo.getValue() === this.PAYMENT_BY_PERIOD){
                 	  this.setDisabledPeriodOptions(false);
                 	  this.setDisabledTransactionOptions(true);
-                  }else if (combo.getValue() == 'By Byte'){
+                  }else if (combo.getValue() === this.PAYMENT_BY_BYTE_USAGE){
                 	  this.setDisabledPeriodOptions(true);
                 	  this.setDisabledTransactionOptions(false);
                   }
@@ -341,10 +343,11 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
             }       	
         });
         
-        this.transactionPayment = new Ext.form.NumberField({
+        this.transactionPayment = new Ext.form.TextField({
             name: 'transactionPayment',
             id: 'transactionPayment',
             width: 180,
+            allowBlank:false,
             emptyText: 'Enter dollars cost per byte..',
             listeners: {
            		scope: this
@@ -417,11 +420,11 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     	
     	this.paymentSelectorPanel.setDisabled(disabled);
    		if(!disabled){
-    		if(this.paymentTypeSelector.getValue() == 'By Byte'){
+    		if(this.paymentTypeSelector.getValue() == this.PAYMENT_BY_BYTE_USAGE){
     			this.setDisabledPeriodOptions(true);
     			this.setDisabledTransactionOptions(false);
    			}
-    		if(this.paymentTypeSelector.getValue() == 'By Period'){
+    		if(this.paymentTypeSelector.getValue() == this.PAYMENT_BY_PERIOD){
     			this.setDisabledTransactionOptions(true);
     			this.setDisabledPeriodOptions(false);
     		}
