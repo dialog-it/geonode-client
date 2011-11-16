@@ -77,7 +77,9 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 totalProperty: 'count',
                 fields: [{
                     name: 'payment_type_value',
-                    name: 'payment'
+                    name: 'payment',
+                    name: 'payment_currency',
+                    name: 'payment_type_description'
                 }]
             }),
             listeners: {
@@ -92,7 +94,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 totalProperty: 'count',
                 fields: [{
                     name: 'payment_type_value',
-                    name: 'payment'
+                    name: 'payment',
+                    name: 'payment_currency'	
                 }]
             }),
             listeners: {
@@ -112,11 +115,11 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     },
     buildPaymentTypesChooser: function (cfg) {
         var finalConfig = {
-            owner: this.permissions.owner,
+        	payment_options: this.permissions.payment_options,
             userLookup: this.userLookup
         };
         Ext.apply(finalConfig, cfg);
-        return new GeoNode.PaymentSelector(finalConfig);
+        return new GeoNode.PaymentSelection(finalConfig);
     },
     buildViewPermissionChooser: function() {
         this.paymentTypeChooser = this.buildPaymentTypesChooser({
@@ -124,7 +127,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         	transactionPaymentTypes: this.transactionPaymentTypes
 
         });
-        this.paymentTypeChooser.setDisabled(true);
+        
         
         return new Ext.Panel({
             border: false,
@@ -222,7 +225,14 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         if (json['anonymous'] == this.levels['readonly']) {
             this.viewMode = 'ANYONE';
         }
-
+        
+        var payment_options = json['payment_options']
+	    if(payment_options != undefined ){
+	        if(payment_options.length > 0 ){
+	          	this.viewMode = 'PAID';
+	        }
+        }
+       
         for (var i = 0; i < json.users.length; i++) {
             if (json.users[i][1] === this.levels['readwrite']) {
                 this.editors.add(new this.editors.recordType({username: json.users[i][0]}, i + 500));
@@ -237,6 +247,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
     // write out permissions to a JSON string, suitable for sending back to the mothership
     writePermissions: function() {
+    	
         var anonymousPermissions, authenticatedPermissions, perUserPermissions;
         if (this.viewMode === 'ANYONE') {
             anonymousPermissions = this.levels['readonly'];
@@ -275,11 +286,14 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         }, this);
         
         payment_options = [];
-        if(this.paymentTypeChooser.readPaymentType() == 'By Periods'){
-        	payment_options = selectedPeriods;
-        }else if(this.paymentTypeChooser.readPaymentType() == 'By Byte'){
-        	payment_options = selectedTransaction;
-        }
+        
+        if(this.viewMode === 'PAID'){
+	        if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_PERIOD){
+	        	payment_options = selectedPeriods;
+	        }else if(this.paymentTypeChooser.readPaymentType() == this.paymentTypeChooser.PAYMENT_BY_BYTE_USAGE){
+	        	payment_options = selectedTransaction;
+	        }
+    	}
         return {
             anonymous: anonymousPermissions,
             authenticated: authenticatedPermissions,

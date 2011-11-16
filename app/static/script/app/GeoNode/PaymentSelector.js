@@ -1,21 +1,97 @@
 Ext.namespace("GeoNode");
-GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
+GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
+
+	paymentType : null,
+	currency :  null,
+	PER_BYTE_TYPE : '5',
+	PER_3_MONTH_TYPE : '1',
+	PER_6_MONTH_TYPE : '2',
+	PER_9_MONTH_TYPE : '4',
+
+	AUS_CURRENCY : '1',
+	NZ_CURRENCY : '2',
+
+	edit_period : false,
+	edit_byte : false,
+
+	PAYMENT_BY_PERIOD : 'By Period',
+	PAYMENT_BY_BYTE_USAGE : 'By Byte Usage',
+
 
     constructor: function (config) {
     	Ext.apply(this, config);
+    	
     	this.initPeriodStore();
+    	this.initPaymentOptions(config.payment_options);
         this.panel = this.doLayout();
+        this.setDisabled(true);
+        if(this.edit_period)this.setInitialPeriodOptionsforEditing();
+        if(this.edit_byte)this.setinitialByteOptionForEditing();
+
+    },
+    initPaymentOptions: function (payment_options){
+    	
+    	 if(payment_options != undefined ){
+    		 this.peroidPaymentTypes.suspendEvents();
+    		 this.transactionPaymentTypes.suspendEvents();
+    		  if(payment_options.length > 0 ){
+    			 
+    			 for (var i = 0; i < payment_options.length ; i++){
+    				 paymentType   =   payment_options[i][0]
+    				 paymentAmount =   payment_options[i][1]
+    				 currencyType  =   payment_options[i][2]
+    				 typeDesc      =   payment_options[i][3]
+    				 
+    				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
+    					 //
+    					 this.paymentType = this.PAYMENT_BY_PERIOD;
+    					 var paymentData = {
+    							 payment_type_value: paymentType,
+    							 payment: paymentAmount,
+    							 payment_currency : currencyType,
+    							 payment_type_description : typeDesc
+    							};
+    					 
+    					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
+    					 this.peroidPaymentTypes.add(r, i); 	
+    					 this.edit_period = true;
+    					
+    				 }else{
+    					 this.paymentType = this.PAYMENT_BY_BYTE_USAGE;
+    					 this.edit_byte = true;
+    					 
+    					 var paymentByteData = {
+    							 payment_type_value: paymentType,
+    							 payment: paymentAmount,
+    							 payment_currency : currencyType
+
+    							};
+    					 var r = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
+    					 this.transactionPaymentTypes.add(r, i); 	
+    					 this.edit_period = true;
+    					 
+    				 }
+    				 this.currency = currencyType;
+    				 this.periodStore
+    			 }
+    			 
+    			
+    			
+    		 }
+   		  this.peroidPaymentTypes.resumeEvents();	 
+   		  this.transactionPaymentTypes.resumeEvents();
+    	 }
     },
     initPeriodStore: function () {
     	
     	
-   	    if (!this.peroidPaymentTypes) {
-            this.peroidPaymentTypes = new Ext.data.ArrayStore({
+    	if (!this.peroidPaymentTypes) {
+         this.peroidPaymentTypes = new Ext.data.ArrayStore({
                 idIndex: 0,
-                fields: ['payment_type_value', 'payment', 'payment_currency'],
+                fields: ['payment_type_value', 'payment', 'payment_currency', 'payment_type_description'],
                 data: []
             });
-        }
+    	}
     	
     	this.periodStore = new Ext.data.ArrayStore({
     		 storeId: 'periodStore',
@@ -23,9 +99,9 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		id:0,
 	        fields: ['payment_type_description', 'payment_type_value', 'payment' ],
 	        data:[
-	                    [ '3 Months', '1',  '0'],
-	                    ['6 Months', '2',  '0'],
-	                    ['9 Months',  '4',  '0']
+	                    [ '3 Months', this.PER_3_MONTH_TYPE,  '0'],
+	                    ['6 Months', this.PER_6_MONTH_TYPE,  '0'],
+	                    ['9 Months',  this.PER_9_MONTH_TYPE,  '0']
 	                ] 
 	    });
     	
@@ -55,8 +131,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		id:0,
    	        fields: ['payment_type_desc'],
    	        data:[
-   	                    [ 'By Periods'],
-   	                    ['By Byte']
+   	                    [ this.PAYMENT_BY_PERIOD],
+   	                    [ this.PAYMENT_BY_BYTE_USAGE]
    	             ] 
    	    });
      	
@@ -67,8 +143,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     		id:0,
    	        fields: ['currency_id', 'currency_type_code'],
    	        data:[
-   	                    [ '1', 'AUD'],
-   	                    [ '2', 'NZD']
+   	                    [ this.AUS_CURRENCY, 'AUD'],
+   	                    [ this.NZ_CURRENCY, 'NZD']
    	             ] 
    	    }); 
     	 
@@ -165,6 +241,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         function addTransactionPayment() {	
    
 			var value = this.transactionPayment.getValue();
+			
 			var transaction_obj = this.availabletransactions.getAt(0);
             var index = this.transactionPayments.store.findExact('numberOfTransactions','1');
 			if(index < 0 && value != ''){
@@ -203,11 +280,12 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 scope: this
             }
         });
-        this.paymentAmount = new Ext.form.NumberField({
+        this.paymentAmount = new Ext.form.TextField({
             name: 'periodCost',
             id: 'periodCost',
             width: 130,
-            emptyText: 'Enter dollor cost for period',
+            allowBlank:false,
+            emptyText: 'Enter dollars cost for period',
             listeners: {
            		scope: this,
            		specialkey: function(f,e){
@@ -228,15 +306,16 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             displayField: 'payment_type_desc',
 		    valueField: 'payment_type_desc',
 		    mode: 'local',
+		    value: this.paymentType,
 		    triggerAction: 'all',
             emptyText: gettext("Select Payment Type..."),
             listeners: {
                 scope: this,
                 'select': function( combo, index, scrollIntoView) {
-                  if(combo.getValue() == 'By Periods'){
+                  if(combo.getValue() === this.PAYMENT_BY_PERIOD){
                 	  this.setDisabledPeriodOptions(false);
                 	  this.setDisabledTransactionOptions(true);
-                  }else if (combo.getValue() == 'By Byte'){
+                  }else if (combo.getValue() === this.PAYMENT_BY_BYTE_USAGE){
                 	  this.setDisabledPeriodOptions(true);
                 	  this.setDisabledTransactionOptions(false);
                   }
@@ -256,6 +335,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             displayField: 'currency_type_code',
 		    valueField: 'currency_id',
 		    mode: 'local',
+		    value:this.currency,
 		    triggerAction: 'all',
             emptyText: gettext("Select Currency..."),
             listeners: {
@@ -263,11 +343,12 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             }       	
         });
         
-        this.transactionPayment = new Ext.form.NumberField({
+        this.transactionPayment = new Ext.form.TextField({
             name: 'transactionPayment',
             id: 'transactionPayment',
             width: 180,
-            emptyText: 'Enter dollor cost per byte..',
+            allowBlank:false,
+            emptyText: 'Enter dollars cost per byte..',
             listeners: {
            		scope: this
             }
@@ -316,6 +397,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                     }]           
         });
         
+        
         return new Ext.Panel({
         	
             border: false,
@@ -331,19 +413,42 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                         ]
             }]
         });
+
+        
     },
     setDisabled: function (disabled) {
+    	
     	this.paymentSelectorPanel.setDisabled(disabled);
-    	if(disabled){
+   		if(!disabled){
+    		if(this.paymentTypeSelector.getValue() == this.PAYMENT_BY_BYTE_USAGE){
+    			this.setDisabledPeriodOptions(true);
+    			this.setDisabledTransactionOptions(false);
+   			}
+    		if(this.paymentTypeSelector.getValue() == this.PAYMENT_BY_PERIOD){
+    			this.setDisabledTransactionOptions(true);
+    			this.setDisabledPeriodOptions(false);
+    		}
+    	}else{
     		this.setDisabledPeriodOptions(disabled);
     		this.setDisabledTransactionOptions(disabled);
-    	}
+    	}  
     },
     setDisabledPeriodOptions: function (disable){
     	this.paymentByPeriodPanel.setDisabled(disable);
     },
     setDisabledTransactionOptions: function (disable){
     	this.transactionPaymentPanel.setDisabled(disable);
+    },setInitialPeriodOptionsforEditing : function (){
+    	
+    	this.paymentSelectorPanel.setDisabled(false);
+    	this.setDisabledPeriodOptions(false);
+    	this.setDisabledTransactionOptions(true);
+    	
+    	
+    },setinitialByteOptionForEditing: function (){
+    	this.paymentSelectorPanel.setDisabled(false);
+    	this.setDisabledPeriodOptions(true);
+    	this.setDisabledTransactionOptions(false);
     },
     readPaymentType: function (){
     	return this.paymentTypeSelector.getValue();
