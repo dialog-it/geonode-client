@@ -33,7 +33,6 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         'readonly': 'layer_readonly',
         'none': '_none'
     },
-
     constructor: function(config) {
         Ext.apply(this, config);
         this.addEvents({ 'updated': true });
@@ -255,6 +254,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             anonymousPermissions = this.levels['none'];
         }
 
+        
         if (this.editMode === 'REGISTERED') {
             authenticatedPermissions = this.levels['readwrite'];
         } else if (this.viewMode === 'REGISTERED') {
@@ -262,7 +262,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         } else {
             authenticatedPermissions = this.levels['none'];
         }
-
+       
         perUserPermissions = [];
         if (this.editMode === 'LIST') {
             this.editors.each(function(rec) {
@@ -294,6 +294,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 	        	payment_options = selectedTransaction;
 	        }
     	}
+       
         return {
             anonymous: anonymousPermissions,
             authenticated: authenticatedPermissions,
