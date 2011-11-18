@@ -30,13 +30,13 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     		  if(payment_options.length > 0 ){
     			 
     			 for (var i = 0; i < payment_options.length ; i++){
-    				 paymentType   =   payment_options[i][0]
-    				 paymentAmount =   payment_options[i][1]
-    				 currencyType  =   payment_options[i][2]
-    				 typeDesc      =   payment_options[i][3]
+    				 paymentType   =   payment_options[i][0];
+    				 paymentAmount =   payment_options[i][1];
+    				 currencyType  =   payment_options[i][2];
+    				 typeDesc      =   payment_options[i][3];
     				 
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
-    					 //
+    					 
     					 this.paymentType = this.PAYMENT_BY_PERIOD;
     					 var paymentData = {
     							 payment_type_value: paymentType,
@@ -59,13 +59,13 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     							 payment_currency : currencyType
 
     							};
-    					 var r = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
-    					 this.transactionPaymentTypes.add(r, i); 	
+    					 var r1 = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
+    					 this.transactionPaymentTypes.add(r1, i); 	
     					 this.edit_period = true;
     					 
     				 }
     				 this.currency = currencyType;
-    				 this.periodStore
+    				 this.periodStore;
     			 }
     			 
     			

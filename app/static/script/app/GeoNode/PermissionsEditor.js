@@ -32,6 +32,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         'readwrite': 'layer_readwrite',
         'readonly': 'layer_readonly',
         'none': '_none'
+        
     },
     constructor: function(config) {
         Ext.apply(this, config);
@@ -136,8 +137,9 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                     { xtype: 'radio', name: 'viewmode', inputValue: 'ANYONE', boxLabel: gettext( 'Anyone')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'REGISTERED', boxLabel: gettext('Any registered user')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')},
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid users')},
-                ], listeners: {
+                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid users')}
+                ], 
+                listeners: {
                     change: function(grp, checked) {
                         this.viewMode = checked.inputValue;
                         this.paymentTypeChooser.setDisabled(this.viewMode !== 'PAID');
@@ -225,7 +227,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             this.viewMode = 'ANYONE';
         }
         
-        var payment_options = json['payment_options']
+        var payment_options = json['payment_options'];
 	    if(payment_options != undefined ){
 	        if(payment_options.length > 0 ){
 	          	this.viewMode = 'PAID';
