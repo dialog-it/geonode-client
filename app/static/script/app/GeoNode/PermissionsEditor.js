@@ -119,7 +119,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             userLookup: this.userLookup
         };
         Ext.apply(finalConfig, cfg);
-        return new GeoNode.PaymentSelection(finalConfig);
+        return new GeoNode.PaymentSelector(finalConfig);
     },
     buildViewPermissionChooser: function() {
         this.paymentTypeChooser = this.buildPaymentTypesChooser({
