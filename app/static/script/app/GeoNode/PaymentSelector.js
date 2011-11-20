@@ -1,9 +1,10 @@
 Ext.namespace("GeoNode");
-GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
+GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 
 	paymentType : null,
 	currency :  null,
-
+	payment_options : null,
+	
 	edit_period : false,
 	edit_byte : false,
 
@@ -15,44 +16,37 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     	Ext.apply(this, config);
     	
     	this.initPeriodStore();
-    	this.initPaymentOptions(config.payment_options);
-        this.panel = this.doLayout();
+        this.payment_options = config.payment_options;
+       
+    	this.panel = this.doLayout();
         this.setDisabled(true);
-        if(this.edit_period)this.setInitialPeriodOptionsforEditing();
-        if(this.edit_byte)this.setinitialByteOptionForEditing();
 
     },
     initPaymentOptions: function (payment_options){
-    	
+    	    	
     	 if(payment_options != undefined ){
-    		 this.peroidPaymentTypes.suspendEvents();
-    		 this.transactionPaymentTypes.suspendEvents();
-    		  if(payment_options.length > 0 ){
+    		 if(payment_options.length > 0 && this.periodStore.getCount() > 0){
     			 
     			 for (var i = 0; i < payment_options.length ; i++){
     				 paymentType   =   payment_options[i][0];
     				 paymentAmount =   payment_options[i][1];
     				 currencyType  =   payment_options[i][2];
     				 typeDesc      =   payment_options[i][3];
-    				 
+
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
-    					 
-    					 this.paymentType = this.PAYMENT_BY_PERIOD;
+    					 this.paymentTypeSelector.setValue( this.PAYMENT_BY_PERIOD);
     					 var paymentData = {
-    							 payment_type_value: paymentType,
+    							 payment_type_value: ''+ paymentType,
     							 payment: paymentAmount,
-    							 payment_currency : currencyType,
+    							 payment_currency : '' + currencyType,
     							 payment_type_description : typeDesc
     							};
     					 
     					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
     					 this.peroidPaymentTypes.add(r, i); 	
-    					 this.edit_period = true;
-    					
+    					 this.setInitialPeriodOptionsforEditing();
     				 }else{
-    					 this.paymentType = this.PAYMENT_BY_BYTE_USAGE;
-    					 this.edit_byte = true;
-    					 
+    					 this.paymentTypeSelector.setValue(  this.PAYMENT_BY_BYTE_USAGE )
     					 var paymentByteData = {
     							 payment_type_value: paymentType,
     							 payment: paymentAmount,
@@ -61,20 +55,18 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
     							};
     					 var r1 = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
     					 this.transactionPaymentTypes.add(r1, i); 	
-    					 this.edit_period = true;
-    					 
+    					 this.setinitialByteOptionForEditing(); 
     				 }
-    				 this.currency = currencyType;
-    				 this.periodStore;
+    				 this.currencyTypeSelector.setValue( currencyType );
+    				 
     			 }
-    			 
-    			
-    			
+
     		 }
-   		  this.peroidPaymentTypes.resumeEvents();	 
-   		  this.transactionPaymentTypes.resumeEvents();
+   		  //this.peroidPaymentTypes.resumeEvents();	 
+   		  //this.transactionPaymentTypes.resumeEvents();
     	 }
     },
+
     initPeriodStore: function () {
     	
     	
@@ -85,37 +77,7 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
                 data: []
             });
     	}
-    	/*
-    	this.periodStore = new Ext.data.ArrayStore({
-    		 storeId: 'periodStore',
-    		idIndex: 0,
-    		id:0,
-	        fields: ['payment_type_description', 'payment_type_value', 'payment' ],
-	        data:[
-	                    [ '3 Months', this.PER_3_MONTH_TYPE,  '0'],
-	                    ['6 Months', this.PER_6_MONTH_TYPE,  '0'],
-	                    ['9 Months',  this.PER_9_MONTH_TYPE,  '0']
-	                ] 
-	    });
-    	*/
 
-        if (!this.periodStore) {
-            var cfg = {
-                proxy: new Ext.data.HttpProxy({ url: '/payment/payment_period_options', method: 'POST' }),
-                reader: new Ext.data.JsonReader({
-                    root: 'payment_period_options',
-                    fields: [{ name : 'payment_type_description'},
-                             { name : 'payment_type_value'},
-                             { name : 'payment'}
-                    		]
-                })
-            };
-            Ext.apply(cfg);
-            this.periodStore = new Ext.data.Store(cfg);
-            this.periodStore.load({params: {query: ''}});
-        }
-        
-    	 
     	 if (!this.transactionPaymentTypes) {
              this.transactionPaymentTypes = new Ext.data.ArrayStore({
                  idIndex: 0,
@@ -133,32 +95,7 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
                  data:[ ['0', '1', '5'] ]
              });
          }
-    	/* 
-     	this.paymentTypeStore = new Ext.data.ArrayStore({
-     		storeId: 'paymentTypeStore',
-    		idIndex: 0,
-    		id:0,
-   	        fields: ['payment_type_desc'],
-   	        data:[
-   	                    [ this.PAYMENT_BY_PERIOD],
-   	                    [ this.PAYMENT_BY_BYTE_USAGE]
-   	             ] 
-   	    });
-     	*/
-         if (!this.CurrencyTypeStore) {
-             var cfg = {
-                 proxy: new Ext.data.HttpProxy({ url: '/payment/payment_currency_options', method: 'POST' }),
-                 reader: new Ext.data.JsonReader({
-                     root: 'payment_currency_options',
-                     fields: [{ name : 'currency_id'},
-                              { name : 'currency_type_code'}
-                     		]
-                 })
-             };
-             Ext.apply(cfg);
-             this.CurrencyTypeStore = new Ext.data.Store(cfg);
-             this.CurrencyTypeStore.load({params: {query: ''}});
-         } 
+
          
          if (!this.paymentTypeStore) {
              var cfg = {
@@ -170,20 +107,15 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
              };
              Ext.apply(cfg);
              this.paymentTypeStore = new Ext.data.Store(cfg);
-             this.paymentTypeStore.load({params: {query: ''}});
+             this.paymentTypeStore.load({params: {query: ''},
+            	 	callback: function (r, options, success){
+            	 		this.paymentTypeStore.add(r);
+            	 	},
+					scope : this,
+             
+             });
          } 
-     	/*
-     	this.CurrencyTypeStore = new Ext.data.ArrayStore({
-     		storeId: 'CurrencyTypeStore',
-    		idIndex: 0,
-    		id:0,
-   	        fields: ['currency_id', 'currency_type_code'],
-   	        data:[
-   	                    [ this.AUS_CURRENCY, 'AUD'],
-   	                    [ this.NZ_CURRENCY, 'NZD']
-   	             ] 
-   	    });
-   	    */
+
          if (!this.CurrencyTypeStore) {
              var cfg = {
                  proxy: new Ext.data.HttpProxy({ url: '/payment/payment_currency_options', method: 'POST' }),
@@ -196,8 +128,38 @@ GeoNode.PaymentSelection = Ext.extend(Ext.util.Observable, {
              };
              Ext.apply(cfg);
              this.CurrencyTypeStore = new Ext.data.Store(cfg);
-             this.CurrencyTypeStore.load({params: {query: ''}});
-         } 
+             this.CurrencyTypeStore.load({
+            	 						  params: {query: ''},
+            	 						  callback: function (r, options, success){
+            	 							  this.CurrencyTypeStore.add(r);
+            	 						  	},
+            	 						  	scope : this
+            	 					});
+         }
+
+
+         if (!this.periodStore) {
+             var cfg = {
+                 proxy: new Ext.data.HttpProxy({ url: '/payment/payment_period_options', method: 'POST' }),
+                 reader: new Ext.data.JsonReader({
+                     root: 'payment_period_options',
+                     fields: [{ name : 'payment_type_description'},
+                              { name : 'payment_type_value'},
+                              { name : 'payment'}
+                     		]
+                 })
+             };
+             Ext.apply(cfg);
+             this.periodStore = new Ext.data.Store(cfg);
+             this.periodStore.load({params: {query: ''},
+             	callback: function (r, options, success){
+             		this.periodStore.add(r);
+         	 		this.initPaymentOptions(this.payment_options);
+         	 	},
+ 				 scope : this,
+          
+          });
+         }
     	 
     },
     doLayout: function () {
