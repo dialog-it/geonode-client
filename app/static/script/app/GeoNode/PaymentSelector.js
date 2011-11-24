@@ -11,6 +11,9 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 	PAYMENT_BY_PERIOD : 'By Period',
 	PAYMENT_BY_BYTE_USAGE : 'By Byte Usage',
 
+	lisenceSelectionWindow : null,
+	lisenceAgreementList : null,
+	lisenceAgreementStore : null, 
 
     constructor: function (config) {
     	Ext.apply(this, config);
@@ -62,8 +65,6 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     			 }
 
     		 }
-   		  //this.peroidPaymentTypes.resumeEvents();	 
-   		  //this.transactionPaymentTypes.resumeEvents();
     	 }
     },
 
@@ -160,6 +161,30 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
           
           });
          }
+         if(!this.lisenceAgreementStore){
+             var cfg = {
+                     proxy: new Ext.data.HttpProxy({ url: '/payment/ajax_payment_lookup', method: 'POST' }),
+                     reader: new Ext.data.JsonReader({
+                         root: 'license_agreement_options',
+                         fields: [{ name : 'title'},
+                                  { name : 'filePath'},
+                                  { name : 'id'}
+                         		]
+                     })
+                 };
+                 Ext.apply(cfg);
+                 this.lisenceAgreementStore = new Ext.data.Store(cfg);
+                 this.lisenceAgreementStore.load({params: {query: 'payment_license_agreement_list'},
+                 	callback: function (r, options, success){
+                 		
+             	 		
+             	 	},
+     				 scope : this,
+              
+              });
+         }
+         
+         
     	 
     },
     doLayout: function () {
@@ -407,30 +432,97 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                     }]           
         });
         
-        this.selectLicenseButton = new Ext.Button({
-        	name : 'SelectLicense',
-        	value : 'SelectLicense',
-        	text : 'Select License Agreement',
-            handler: function(e){
-               	alert("coming soon");
+        
+        this.liscgrdsm = new Ext.grid.CheckboxSelectionModel({
+            checkOnly: true,
+            singleSelect : true,
+            renderer: function(v, p, record){
+               return '<div class="x-grid3-row-checker">&#160;</div>';
+              
             },
-            scope: this
+            listeners: {
+                'beforerowselect' : function(sm, rowIndex, keepExisting, record){
+
+                }
+            }
+        });
+        this.liscgrdsmcolumns = [
+                        {
+                            header: 'Title',
+                            dataIndex: 'title',
+                            sortable: true,
+                            width:182
+                            
+                          },
+                          {
+                              header: '',
+                              dataIndex: 'id',
+                              sortable: false,
+                              width:50,
+                              renderer: this.renderAction                	  
+                           }
+
+                        ];
+        
+        this.liscgrdsmcolumns.push(this.liscgrdsm);
+        
+        this.lisenceAgreementList = new Ext.grid.GridPanel({
+           
+            width: 260,//475,
+            renderTo: this.renderTo,
+            store: this.lisenceAgreementStore,
+            autoHeight:true, 
+            selModel:this.liscgrdsm,
+            columns: this.liscgrdsmcolumns
+          });
+        
+        this.uploadlicense = new Ext.ux.form.FileUploadField({
+            id: 'licenseFile',
+            emptyText: 'Select license file',
+            fieldLabel: 'Data File or ZIP',
+          
+            name: 'licenseFile',
+            allowBlank: false,
+            validator: function(name) {
+                /*
+                if ((name.length > 0) && (name.search(/\.zip$/i) == -1)) {
+                    return 'Please select a zip file' ;
+                } else {
+                    return true;
+                }
+                */
+                return true;
+            }
+            
         });
         
-        this.licenseAgreementPanel = new Ext.Panel({
-            border: false,
-            renderTo: this.renderTo,
-            width:400,
-            items: [
-                    {
-                        border: false,
-                        items: [
-                                 { layout: 'hbox', border: false, items: [this.selectLicenseButton] }
-                                
-                               ]
-                    }]           
-       	
+        this.licenseTitle = new Ext.form.TextField({
+            name: 'licenseTitle',
+            id: 'licenseTitle',
+            width: 260,
+            allowBlank:false,
+            emptyText: 'License title',
+            listeners: {
+           		scope: this
+            }
         });
+        
+        
+        this.lisenceSelectionWindow = new Ext.Panel({
+    	    title: 'Select License',
+    	    renderTo: this.renderTo,
+            width:260,
+            collapsible:true,
+            collapsed:true,
+            items: [
+                    	{ layout: 'hbox', border: false, items: [this.lisenceAgreementList] },
+                    	{ layout: 'hbox', border: false, items: [this.licenseTitle] },
+                    	{ layout: 'hbox', border: false, items: [this.uploadlicense] }
+                   ]
+               			
+          });
+        
+
         
         return new Ext.Panel({
         	
@@ -444,13 +536,19 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                         this.paymentSelectorPanel,
                         this.paymentByPeriodPanel,
                         this.transactionPaymentPanel,
-                        this.licenseAgreementPanel
+                        this.lisenceSelectionWindow
                         ]
             }]
         });
 
         
-    },
+    },renderAction: function(val){ 
+    	 var url = '../payment/license/'+val;
+    	 return '<a target = "_blank" href="' + url + '">'+ 'view' +'</a>';
+    },licensePopup : function (url){
+    	popupWindow = window.open(
+    			url,'popUpWindow','height=700,width=800,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes')   	
+    }, 
     setDisabled: function (disabled) {
     	
     	this.paymentSelectorPanel.setDisabled(disabled);

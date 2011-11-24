@@ -129,6 +129,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         });
         
         
+        
         return new Ext.Panel({
             border: false,
             items: [
