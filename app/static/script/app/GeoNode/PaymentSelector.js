@@ -11,6 +11,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 	PAYMENT_BY_PERIOD : 'By Period',
 	PAYMENT_BY_BYTE_USAGE : 'By Byte Usage',
 
+	csrf_token : null, 
 	lisenceSelectionWindow : null,
 	lisenceAgreementList : null,
 	lisenceAgreementStore : null, 
@@ -20,7 +21,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	
     	this.initPeriodStore();
         this.payment_options = config.payment_options;
-       
+        this.csrf_token = config.csrf_token;
     	this.panel = this.doLayout();
         this.setDisabled(true);
 
@@ -74,7 +75,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	if (!this.peroidPaymentTypes) {
          this.peroidPaymentTypes = new Ext.data.ArrayStore({
                 idIndex: 0,
-                fields: ['payment_type_value', 'payment', 'payment_currency', 'payment_type_description'],
+                fields: ['payment_type_value', 'payment', 'payment_currency', 'payment_type_description', 'licenseId'],
                 data: []
             });
     	}
@@ -82,7 +83,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	 if (!this.transactionPaymentTypes) {
              this.transactionPaymentTypes = new Ext.data.ArrayStore({
                  idIndex: 0,
-                 fields: ['payment', 'payment_type_value', 'payment_currency'],
+                 fields: ['payment', 'payment_type_value', 'payment_currency', 'licenseId'],
                  data: []
              });
          }
@@ -442,8 +443,22 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             },
             listeners: {
                 'beforerowselect' : function(sm, rowIndex, keepExisting, record){
-
-                }
+                	
+                	var periodPayments = this.peroidPaymentTypes.getRange(0, this.peroidPaymentTypes.getCount());
+                	for (var i = 0; i < this.peroidPaymentTypes.getCount() ; i++){
+                		var paymentRecord = this.peroidPaymentTypes.getAt(i);
+                		paymentRecord.set('licenseId', record.get('id'))
+                	}
+                	
+                	var usagePayments = this.transactionPaymentTypes.getRange(0, this.transactionPaymentTypes.getCount());
+                	for (var i = 0; i < this.transactionPaymentTypes.getCount() ; i++){
+                		var transactionPaymentRecord = this.transactionPaymentTypes.getAt(i);
+                		transactionPaymentRecord.set('licenseId', record.get('id'))
+                	}
+                	
+                	
+                },
+                scope : this
             }
         });
         this.liscgrdsmcolumns = [
@@ -474,24 +489,35 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             autoHeight:true, 
             selModel:this.liscgrdsm,
             columns: this.liscgrdsmcolumns
+  
           });
         
         this.uploadlicense = new Ext.ux.form.FileUploadField({
             id: 'licenseFile',
             emptyText: 'Select license file',
-            fieldLabel: 'Data File or ZIP',
-          
             name: 'licenseFile',
             allowBlank: false,
-            validator: function(name) {
-                /*
-                if ((name.length > 0) && (name.search(/\.zip$/i) == -1)) {
-                    return 'Please select a zip file' ;
-                } else {
-                    return true;
-                }
-                */
-                return true;
+            fileUpload: true,
+            listeners : {
+            	scope : this,
+            	fileselected : function (cmp, value){
+            		alert("f");
+            		this.licenseUploadForm.getForm().submit();
+            		/*
+            		cmp.setValue(value.split(/[/\\]/).pop());
+            		var target = 'http://localhost:8001/payment/uploadLicense';
+            		this.licenseUploadForm.getForm().submit({
+            			url: target,
+            			waitMsg: gettext('Uploading your license file...'),
+            			success: function(fp, o) {
+            				alert("uploaded");
+            			},
+            			failure: function(fp, o) {
+            				alert('failed');
+            			}
+            		});
+            		*/
+            	}
             }
             
         });
@@ -499,15 +525,36 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         this.licenseTitle = new Ext.form.TextField({
             name: 'licenseTitle',
             id: 'licenseTitle',
-            width: 260,
+            width: 250,
             allowBlank:false,
-            emptyText: 'License title',
-            listeners: {
-           		scope: this
-            }
+            emptyText: 'License title'
+            
         });
         
-        
+        this.licenseUploadForm = new Ext.form.FormPanel({
+            width: 260,
+            labelAlign: 'left',
+            renderTo: 'upload_form',
+            align:'left',
+            labelWidth: 1,
+            title: 'Upload License',
+            defaults: {
+                anchor: '95%',
+                msgTarget: 'side'
+            },
+            fileUpload: true,
+            url : '../payment/uploadLicense',
+            padding:1,
+            frame: true,
+            unstyled: true,
+            items: [ this.licenseTitle, this.uploadlicense,
+                     {
+                xtype: "hidden",
+                name: "csrfmiddlewaretoken",
+                value: this.csrf_token
+            }]
+
+        });
         this.lisenceSelectionWindow = new Ext.Panel({
     	    title: 'Select License',
     	    renderTo: this.renderTo,
@@ -515,9 +562,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             collapsible:true,
             collapsed:true,
             items: [
-                    	{ layout: 'hbox', border: false, items: [this.lisenceAgreementList] },
-                    	{ layout: 'hbox', border: false, items: [this.licenseTitle] },
-                    	{ layout: 'hbox', border: false, items: [this.uploadlicense] }
+                    	{ layout: 'hbox', border: true, items: [this.lisenceAgreementList] },
+                    	this.licenseUploadForm
                    ]
                			
           });
