@@ -286,7 +286,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 			if(index < 0 && value != ''){
 				transaction_obj.set('payment', value);
 				transaction_obj.set('payment_currency', this.currencyTypeSelector.getValue());
-				period_obj.set('licenseId', this.lisenceAgreement);
+				transaction_obj.set('licenseId', this.lisenceAgreement);
 				this.transactionPayments.store.add([transaction_obj]);
 				this.transactionPayment.reset();
 			}
@@ -497,7 +497,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             frame: true,
             autoExpandColumn : 'title',
      
-            tbar    : [
+            bbar    : [
                        {
                          text    : 'Refresh',
                          handler : function() {
