@@ -13,8 +13,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
 
 	csrf_token : null, 
 	lisenceSelectionWindow : null,
-	lisenceAgreementList : null,
-	lisenceAgreementStore : null, 
+
 	lisenceAgreement : '-1',
 	
     constructor: function (config) {
@@ -25,7 +24,6 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         this.csrf_token = config.csrf_token;
     	this.panel = this.doLayout();
         this.setDisabled(true);
-
     },
     initPaymentOptions: function (payment_options){
     	    	
@@ -37,7 +35,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     				 paymentAmount =   payment_options[i][1];
     				 currencyType  =   payment_options[i][2];
     				 typeDesc      =   payment_options[i][3];
-
+    				 this.lisenceAgreement =  payment_options[i][4];
+    				 
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
     					 this.paymentTypeSelector.setValue( this.PAYMENT_BY_PERIOD);
     					 var paymentData = {
@@ -178,7 +177,13 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                  this.lisenceAgreementStore = new Ext.data.Store(cfg);
                  this.lisenceAgreementStore.load({params: {query: 'payment_license_agreement_list'},
              	 	callback: function (r, options, success){
-             	 		this.lisenceAgreementStore.add(r);
+             	 		for ( var i = 0; i < this.lisenceAgreementStore.getCount(); i++){
+             	 			
+             	 			if ( this.lisenceAgreement == this.lisenceAgreementStore.getAt(i).get('id') )
+             	 				{
+             	 					this.lisenceAgreementList.getSelectionModel().selectRow(i);
+             	 				}
+             	 		}
              	 	},
  					scope : this
                  });
@@ -274,6 +279,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.selectedPeriods.store.add([period_obj]);
                 this.availablePeriods.reset();
                 this.paymentAmount.reset();
+       	
+
             }        
         }
         
@@ -434,7 +441,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                     }]           
         });
         
-        
+       
         this.liscgrdsm = new Ext.grid.CheckboxSelectionModel({
             checkOnly: true,
             singleSelect : true,
@@ -444,22 +451,18 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             },
             listeners: {
                 'beforerowselect' : function(sm, rowIndex, keepExisting, record){
-                	
                 	var periodPayments = this.peroidPaymentTypes.getRange(0, this.peroidPaymentTypes.getCount());
                 	for (var i = 0; i < this.peroidPaymentTypes.getCount() ; i++){
                 		var paymentRecord = this.peroidPaymentTypes.getAt(i);
                 		paymentRecord.set('licenseId', record.get('id'))
                 	}
-                	
                 	var usagePayments = this.transactionPaymentTypes.getRange(0, this.transactionPaymentTypes.getCount());
                 	for (var i = 0; i < this.transactionPaymentTypes.getCount() ; i++){
                 		var transactionPaymentRecord = this.transactionPaymentTypes.getAt(i);
                 		transactionPaymentRecord.set('licenseId', record.get('id'))
                 	}
                 	
-                	this.lisenceAgreement = record.get('id');
-                	
-                	
+                	this.lisenceAgreement = record.get('id');	
                 },
                 scope : this
             }
@@ -487,30 +490,27 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         this.liscgrdsmcolumns.push(this.liscgrdsm);
         
         this.lisenceAgreementList = new Ext.grid.GridPanel({
-           
-            width: 260,//475,
+        	store: this.lisenceAgreementStore,
+            width: 260,
             height : 200,
             renderTo: this.renderTo,
-            store: this.lisenceAgreementStore,
             selModel:this.liscgrdsm,
             columns: this.liscgrdsmcolumns,
             frame: true,
             autoExpandColumn : 'title',
-     
             bbar    : [
                        {
                          text    : 'Refresh',
                          handler : function() {
-                        	 this.lisenceAgreementStore.load({params: {query: 'payment_license_agreement_list'}
+                        	 this.lisenceAgreementStore.reload({params: {query: 'payment_license_agreement_list'}
                              });
                          },
                          scope : this
-                       },
-                       '->' // Fill, 
+                       } 
                    ]
           });
         
-   	 
+        
         this.uploadlicense = new Ext.ux.form.FileUploadField({
             id: 'licenseFile',
             emptyText: 'Select license file',
@@ -544,7 +544,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
         this.licenseUploadForm = new Ext.form.FormPanel({
             width: 260,
             labelAlign: 'left',
-            renderTo: 'upload_form',
+            renderTo: this.renderTo,
             align:'left',
             labelWidth: 1,
             title: '<B>Upload License</B>',
@@ -565,6 +565,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             }]
 
         });
+        
         this.lisenceSelectionWindow = new Ext.Panel({
     	    title: 'Select License',
     	    renderTo: this.renderTo,
@@ -572,13 +573,13 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             collapsible:true,
             collapsed:true,
             items: [
-                    	this.lisenceAgreementList ,
-                    	this.licenseUploadForm
+                    	this.lisenceAgreementList 
+                    	,this.licenseUploadForm
                    ]
                			
           });
         
-
+       
         
         return new Ext.Panel({
         	
@@ -638,15 +639,19 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	this.paymentSelectorPanel.setDisabled(false);
     	this.setDisabledPeriodOptions(false);
     	this.setDisabledTransactionOptions(true);
+    	this.lisenceSelectionWindow.setDisabled(false); 
     	
     	
     },setinitialByteOptionForEditing: function (){
     	this.paymentSelectorPanel.setDisabled(false);
     	this.setDisabledPeriodOptions(true);
     	this.setDisabledTransactionOptions(false);
+    	this.lisenceSelectionWindow.setDisabled(false); 
+
     },
     readPaymentType: function (){
     	return this.paymentTypeSelector.getValue();
     }
     
 });
+

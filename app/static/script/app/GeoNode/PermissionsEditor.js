@@ -81,7 +81,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                     name: 'payment_type_value',
                     name: 'payment',
                     name: 'payment_currency',
-                    name: 'payment_type_description'
+                    name: 'payment_type_description',
+                    name: 'licenseId'
                 }]
             }),
             listeners: {
@@ -97,7 +98,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 fields: [{
                     name: 'payment_type_value',
                     name: 'payment',
-                    name: 'payment_currency'	
+                    name: 'payment_currency',
+                    name: 'licenseId'
                 }]
             }),
             listeners: {
