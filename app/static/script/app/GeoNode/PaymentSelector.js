@@ -29,21 +29,22 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	    	
     	 if(payment_options != undefined ){
     		 if(payment_options.length > 0 && this.periodStore.getCount() > 0){
-    			 
+
     			 for (var i = 0; i < payment_options.length ; i++){
     				 paymentType   =   payment_options[i][0];
     				 paymentAmount =   payment_options[i][1];
     				 currencyType  =   payment_options[i][2];
     				 typeDesc      =   payment_options[i][3];
     				 this.lisenceAgreement =  payment_options[i][4];
-    				 
+    				
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
     					 this.paymentTypeSelector.setValue( this.PAYMENT_BY_PERIOD);
     					 var paymentData = {
     							 payment_type_value: ''+ paymentType,
     							 payment: paymentAmount,
     							 payment_currency : '' + currencyType,
-    							 payment_type_description : typeDesc
+    							 payment_type_description : typeDesc,
+    							 licenseId : this.lisenceAgreement
     							};
     					 
     					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
@@ -54,7 +55,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     					 var paymentByteData = {
     							 payment_type_value: paymentType,
     							 payment: paymentAmount,
-    							 payment_currency : currencyType
+    							 payment_currency : currencyType,
+    							 licenseId : this.lisenceAgreement
 
     							};
     					 var r1 = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
@@ -177,6 +179,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                  this.lisenceAgreementStore = new Ext.data.Store(cfg);
                  this.lisenceAgreementStore.load({params: {query: 'payment_license_agreement_list'},
              	 	callback: function (r, options, success){
+           			 this.peroidPaymentTypes.suspendEvents();
+        			 this.transactionPaymentTypes.suspendEvents();
              	 		for ( var i = 0; i < this.lisenceAgreementStore.getCount(); i++){
              	 			
              	 			if ( this.lisenceAgreement == this.lisenceAgreementStore.getAt(i).get('id') )
@@ -184,6 +188,8 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
              	 					this.lisenceAgreementList.getSelectionModel().selectRow(i);
              	 				}
              	 		}
+           			 this.peroidPaymentTypes.resumeEvents();
+        			 this.transactionPaymentTypes.resumeEvents();
              	 	},
  					scope : this
                  });
@@ -451,15 +457,16 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             },
             listeners: {
                 'beforerowselect' : function(sm, rowIndex, keepExisting, record){
+                	
                 	var periodPayments = this.peroidPaymentTypes.getRange(0, this.peroidPaymentTypes.getCount());
                 	for (var i = 0; i < this.peroidPaymentTypes.getCount() ; i++){
                 		var paymentRecord = this.peroidPaymentTypes.getAt(i);
-                		paymentRecord.set('licenseId', record.get('id'))
+                		paymentRecord.set('licenseId', record.get('id'));
                 	}
                 	var usagePayments = this.transactionPaymentTypes.getRange(0, this.transactionPaymentTypes.getCount());
                 	for (var i = 0; i < this.transactionPaymentTypes.getCount() ; i++){
                 		var transactionPaymentRecord = this.transactionPaymentTypes.getAt(i);
-                		transactionPaymentRecord.set('licenseId', record.get('id'))
+                		transactionPaymentRecord.set('licenseId', record.get('id'));
                 	}
                 	
                 	this.lisenceAgreement = record.get('id');	
@@ -654,4 +661,5 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     }
     
 });
+
 
