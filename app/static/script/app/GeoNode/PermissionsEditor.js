@@ -27,6 +27,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     transactionPaymentTypes:null,
     paymentTypeChooser: null,
 
+    csrf_token : null, 
     levels: {
         'admin': 'layer_admin',
         'readwrite': 'layer_readwrite',
@@ -41,6 +42,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         this.initStores();
         this.readPermissions(config.permissions);
         this.doLayout();
+        this.csrf_token = config.csrf_token;
     },
 
     initStores: function(config) {
@@ -79,7 +81,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                     name: 'payment_type_value',
                     name: 'payment',
                     name: 'payment_currency',
-                    name: 'payment_type_description'
+                    name: 'payment_type_description',
+                    name: 'licenseId'
                 }]
             }),
             listeners: {
@@ -95,7 +98,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 fields: [{
                     name: 'payment_type_value',
                     name: 'payment',
-                    name: 'payment_currency'	
+                    name: 'payment_currency',
+                    name: 'licenseId'
                 }]
             }),
             listeners: {
@@ -116,7 +120,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     buildPaymentTypesChooser: function (cfg) {
         var finalConfig = {
         	payment_options: this.permissions.payment_options,
-            userLookup: this.userLookup
+            userLookup: this.userLookup,
+            csrf_token : this.csrf_token
         };
         Ext.apply(finalConfig, cfg);
         return new GeoNode.PaymentSelector(finalConfig);
@@ -127,6 +132,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         	transactionPaymentTypes: this.transactionPaymentTypes
 
         });
+        
         
         
         return new Ext.Panel({
@@ -279,12 +285,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         
         selectedPeriods = [];
         this.peroidPaymentTypes.each(function (rec) {
-        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency')]);
+        	selectedPeriods.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency'), rec.get('licenseId')]);
         }, this);
 
         selectedTransaction = [];
         this.transactionPaymentTypes.each(function (rec) {
-        	selectedTransaction.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency')]);
+        	selectedTransaction.push([rec.get("payment_type_value"), rec.get('payment'), rec.get('payment_currency'), rec.get('licenseId')]);
         }, this);
         
         payment_options = [];
