@@ -26,7 +26,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     peroidPaymentTypes:null,
     transactionPaymentTypes:null,
     paymentTypeChooser: null,
-    lisenceAgreement : '-1',
+    lisenceAgreement: '-1',
+    payment_type_by_month_desc: 'MONTH_DURATION',
     csrf_token : null, 
     levels: {
         'admin': 'layer_admin',
@@ -122,17 +123,17 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 this.lisenceAgreementStore = new Ext.data.Store(cfg);
                 this.lisenceAgreementStore.load({params: {query: 'payment_license_agreement_list'},
             	callback: function (r, options, success){
-          			 this.peroidPaymentTypes.suspendEvents();
-          			 this.transactionPaymentTypes.suspendEvents();
-            	 		for ( var i = 0; i < this.lisenceAgreementStore.getCount(); i++){
+            		this.lisenceAgreementList.getSelectionModel().suspendEvents();
+          			 
+            	 	for ( var i = 0; i < this.lisenceAgreementStore.getCount(); i++){
             	 			
             	 			if ( this.lisenceAgreement == this.lisenceAgreementStore.getAt(i).get('id') )
             	 				{
             	 					this.lisenceAgreementList.getSelectionModel().selectRow(i);
             	 				}
             	 		}
-          			 this.peroidPaymentTypes.resumeEvents();
-          			 this.transactionPaymentTypes.resumeEvents();
+            	   this.lisenceAgreementList.getSelectionModel().resumeEvents();
+          			
             	 	},
 					scope : this
                 });
@@ -283,6 +284,42 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
         this.editors.resumeEvents();
         this.managers.resumeEvents();
+        
+        var paymentOptions = json['payment_options'];
+        if(payment_options != undefined ){
+	        this.peroidPaymentTypes.suspendEvents();
+	        this.transactionPaymentTypes.suspendEvents();
+	        for (var i = 0; i < paymentOptions.length ; i++){
+				 paymentType   =   paymentOptions[i][0];
+				 paymentAmount =   paymentOptions[i][1];
+				 currencyType  =   paymentOptions[i][2];
+				 typeDesc      =   paymentOptions[i][3];
+				 paymentTyDesc =  paymentOptions[i][4];
+	
+				 if(this.payment_type_by_month_desc == paymentTyDesc){
+					 var paymentData = {
+							 payment_type_value:  paymentType,
+							 payment: paymentAmount,
+							 payment_currency : '' + currencyType,
+							 payment_type_description : typeDesc,
+							
+							};
+					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
+					 this.peroidPaymentTypes.add(r, i); 	 
+				 }else{
+					 var paymentByteData = {
+							 payment_type_value: paymentType,
+							 payment: paymentAmount,
+							 payment_currency : currencyType,
+							};
+					 var r1 = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
+					 this.transactionPaymentTypes.add(r1, i); 					 
+				 }
+	        	
+	        }
+	        this.peroidPaymentTypes.resumeEvents();
+	        this.transactionPaymentTypes.resumeEvents();
+        }
     },
 
     // write out permissions to a JSON string, suitable for sending back to the mothership
