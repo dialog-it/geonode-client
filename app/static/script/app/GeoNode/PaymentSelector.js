@@ -115,7 +115,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
             	 	callback: function (r, options, success){
             	 		this.paymentTypeStore.add(r);
             	 	},
-					scope : this,
+					scope : this
              
              });
          } 
