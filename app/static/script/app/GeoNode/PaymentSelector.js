@@ -26,38 +26,13 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     	    	
     	 if(payment_options != undefined ){
     		 if(payment_options.length > 0 && this.periodStore.getCount() > 0){
-
     			 for (var i = 0; i < payment_options.length ; i++){
-    				 paymentType   =   payment_options[i][0];
-    				 paymentAmount =   payment_options[i][1];
-    				 currencyType  =   payment_options[i][2];
-    				 typeDesc      =   payment_options[i][3];
-    				 
-    				
+    				 paymentType   =   payment_options[i][0];    				
     				 if (this.periodStore.find('payment_type_value', paymentType) >=  0){
-    					 this.paymentTypeSelector.setValue( this.PAYMENT_BY_PERIOD);
-    					 var paymentData = {
-    							 payment_type_value: ''+ paymentType,
-    							 payment: paymentAmount,
-    							 payment_currency : '' + currencyType,
-    							 payment_type_description : typeDesc,
-    							
-    							};
-    					 
-    					 var r = new this.peroidPaymentTypes.recordType(paymentData, 100 + i); 		 
-    					 this.peroidPaymentTypes.add(r, i); 	
+    					 this.paymentTypeSelector.setValue( this.PAYMENT_BY_PERIOD);	
     					 this.setInitialPeriodOptionsforEditing();
     				 }else{
-    					 this.paymentTypeSelector.setValue(  this.PAYMENT_BY_BYTE_USAGE )
-    					 var paymentByteData = {
-    							 payment_type_value: paymentType,
-    							 payment: paymentAmount,
-    							 payment_currency : currencyType,
-    							
-
-    							};
-    					 var r1 = new this.transactionPaymentTypes.recordType(paymentByteData, 200 + i); 		 
-    					 this.transactionPaymentTypes.add(r1, i); 	
+    					 this.paymentTypeSelector.setValue(  this.PAYMENT_BY_BYTE_USAGE );
     					 this.setinitialByteOptionForEditing(); 
     				 }
     				 this.currencyTypeSelector.setValue( currencyType );
@@ -255,7 +230,7 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
                 this.paymentAmount.reset();
        	
 
-            }        
+            }         
         }
         
         function addTransactionPayment() {	
@@ -486,3 +461,4 @@ GeoNode.PaymentSelector = Ext.extend(Ext.util.Observable, {
     }
     
 });
+
