@@ -456,7 +456,20 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             	scope : this,
             	fileselected : function (cmp, value){
             		if(this.licenseUploadForm.getForm().isValid()){
-                		this.licenseUploadForm.getForm().submit();
+                		this.licenseUploadForm.getForm().submit({
+                            url: '../payment/uploadLicense',
+                            waitMsg: gettext('Uploading your License...'),
+                            scope : this,
+                            success: function(fp, o) {
+                                alert("License Uploaded Successfully");
+                           	 	this.lisenceAgreementStore.reload({params: {query: 'payment_license_agreement_list'}
+                           	 	});
+                           	    this.licenseUploadForm.getForm().reset();
+                            },
+                            failure: function(fp, o) {
+                            	alert("Error Uploading License " + fp);
+                           }
+                        });
                 		
             		}else{
             			alert('Please enter the license title ')
