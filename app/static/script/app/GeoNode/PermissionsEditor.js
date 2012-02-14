@@ -23,6 +23,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     // a GeoNode.UserSelector widget for the manager list
     managerChooser: null,
 
+    paymentNotRequired: false,
+    
     peroidPaymentTypes:null,
     transactionPaymentTypes:null,
     paymentTypeChooser: null,
@@ -40,6 +42,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         Ext.apply(this, config);
         this.addEvents({ 'updated': true });
         GeoNode.PermissionsEditor.superclass.constructor.call(this, config);
+        
         this.initStores();
         this.readPermissions(config.permissions);
         this.doLayout();
@@ -164,7 +167,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         });
         
         
-        
+       
         return new Ext.Panel({
             border: false,
             items: [
@@ -173,7 +176,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                     { xtype: 'radio', name: 'viewmode', inputValue: 'ANYONE', boxLabel: gettext( 'Anyone')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'REGISTERED', boxLabel: gettext('Any registered user')},
                     { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')},
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'PAID', boxLabel: gettext('Paid users')}
+                    { xtype: 'radio', name: 'viewmode', disabled: this.paymentNotRequired, inputValue: 'PAID', boxLabel: gettext('Paid users')}
                 ], 
                 listeners: {
                     change: function(grp, checked) {
@@ -460,7 +463,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                             url: '../payment/uploadLicense',
                             waitMsg: gettext('Uploading your License...'),
                             scope : this,
-                            success: function(fp, o) {
+                            success: function uploaded(fp, o) {
                                 alert("License Uploaded Successfully");
                            	 	this.lisenceAgreementStore.reload({params: {query: 'payment_license_agreement_list'}
                            	 	});
