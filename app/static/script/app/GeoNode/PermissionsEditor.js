@@ -25,7 +25,12 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
     paymentNotRequired: false,
     
+    licenseWindowClose: true, 
+    
+    applyButtonRequired : true,
+    
     peroidPaymentTypes:null,
+    
     transactionPaymentTypes:null,
     paymentTypeChooser: null,
     lisenceAgreement: '-1',
@@ -252,7 +257,33 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             ]
         });
     },
-
+    buildApplyChangesPanel: function (){
+    	var applyButton = new Ext.Button({
+    		
+            scope: this,
+            text : 'Save Changes',
+            handler: function (){
+            	alert("Your changes are saved");
+            }
+        });
+    	if (!this.applyButtonRequired){
+	        return new Ext.Panel({
+	            border: false, 
+	        });    		
+    		
+    	}else{
+    	
+	        return new Ext.Panel({
+	            border: false, 
+	            bodyStyle:'padding:8px 8px 8px',
+	            items: [
+	                    applyButton
+	                    
+	                    
+	            ]
+	        });
+    	}
+    }, 
     readPermissions: function(json) {
         this.editors.suspendEvents();
         this.managers.suspendEvents();
@@ -522,7 +553,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     	    renderTo: this.renderTo,
             width:260,
             collapsible:true,
-            collapsed:true,
+            collapsed:this.licenseWindowClose,
             items: [
                     	this.lisenceAgreementList 
                     	,this.licenseUploadForm
@@ -537,7 +568,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 this.buildViewPermissionChooser(),
                 this.lisenceSelectionWindow,
                 this.buildEditPermissionChooser(),
-                this.buildManagePermissionChooser()
+                this.buildManagePermissionChooser(),
+                this.buildApplyChangesPanel()
                 
             ]
         });
