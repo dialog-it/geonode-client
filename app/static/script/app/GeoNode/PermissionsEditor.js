@@ -370,7 +370,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
         if (this.editMode === 'REGISTERED') {
             authenticatedPermissions = this.levels['readwrite'];
         } else if (this.viewMode === 'REGISTERED') {
-            authenticatedPermissions = this.levels['readonly'];
+            //authenticatedPermissions = this.levels['readonly'];
         } else {
             authenticatedPermissions = this.levels['none'];
         }
