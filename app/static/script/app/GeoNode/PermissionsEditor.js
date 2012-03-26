@@ -351,6 +351,13 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 				 }
 	        	
 	        }
+	        
+	        var viewModeRd = json['viewMode'];
+	        
+	        if ( viewModeRd != '-1'){
+				this.viewMode = viewModeRd;	
+			}
+	       			
 	        this.peroidPaymentTypes.resumeEvents();
 	        this.transactionPaymentTypes.resumeEvents();
         }
@@ -412,7 +419,8 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
             authenticated: authenticatedPermissions,
             users: perUserPermissions,
             payment_options : payment_options,
-            license_id : this.lisenceAgreement
+            license_id : this.lisenceAgreement,
+            viewMode   : this.viewMode
         };
     },
 
@@ -580,4 +588,3 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 		popupWindow = window.open(
 				url,'popUpWindow','height=700,width=800,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes')   	
     }
-});
