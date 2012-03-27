@@ -31,6 +31,10 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
     
     peroidPaymentTypes:null,
     
+    viewAccessAnyone : null,
+    
+    viewEditorAccess : null,
+    
     transactionPaymentTypes:null,
     paymentTypeChooser: null,
     lisenceAgreement: '-1',
@@ -171,16 +175,25 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
 
         });
         
+        this.viewAccessAnyone = new Ext.form.Radio ({
+        	inputValue : 'ANYONE',
+       	 	boxLabel: gettext( 'Anyone'),
+       	 	name: 'viewmode'
+        });
+        this.viewEditorAccess = new Ext.form.Radio ({
+        	inputValue : 'EDITORS',
+       	 	boxLabel: gettext( 'Only users who can edit'),
+       	 	name: 'viewmode'
+        });
         
-       
         return new Ext.Panel({
             border: false,
             items: [
                 {html: "<strong>" + gettext("Who can view and download this data?") + "</strong>", flex: 1, border: false},
                 { xtype: 'radiogroup', columns: 1, value: this.viewMode, items: [
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'ANYONE', boxLabel: gettext( 'Anyone')},
+                    this.viewAccessAnyone,
                     { xtype: 'radio', name: 'viewmode', inputValue: 'REGISTERED', boxLabel: gettext('Any registered user')},
-                    { xtype: 'radio', name: 'viewmode', inputValue: 'EDITORS', boxLabel: gettext('Only users who can edit')},
+                    this.viewEditorAccess,
                     { xtype: 'radio', name: 'viewmode', disabled: this.paymentNotRequired, inputValue: 'PAID', boxLabel: gettext('Paid users')}
                 ], 
                 listeners: {
@@ -439,6 +452,15 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 	this.lisenceAgreement = record.get('id');	
                 },
                 'rowselect' : function (sm, rowIndex, r){
+                	this.viewAccessAnyone.disable();
+                	if (this.viewMode == 'ANYONE'){
+                		this.viewEditorAccess.setValue (true);
+                		this.viewMode = 'EDITORS';
+                	}
+                	this.fireEvent("updated", this);
+                },
+                'rowdeselect' : function (sm, rowIndex, r){
+                	this.viewAccessAnyone.enable();
                 	this.fireEvent("updated", this);
                 },
                 scope : this
