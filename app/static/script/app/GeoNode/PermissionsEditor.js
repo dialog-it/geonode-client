@@ -461,7 +461,7 @@ GeoNode.PermissionsEditor = Ext.extend(Ext.util.Observable, {
                 },
                 'rowdeselect' : function (sm, rowIndex, r){
                 	this.viewAccessAnyone.enable();
-                	this.fireEvent("updated", this);
+                	
                 },
                 scope : this
             }
